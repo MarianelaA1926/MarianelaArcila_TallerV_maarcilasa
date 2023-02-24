@@ -18,10 +18,17 @@
 
 #include <stdint.h>
 
+//Definicion de Variables
+
+unsigned short estudiantes = 0;
+unsigned char counter_i = 0;
+
+
 //Loop For Ever
 int main(void)
 {
 	while(1){
-
+		estudiantes++;
+		counter_i= ~counter_i;
 	}
-}
+	}
