@@ -108,7 +108,54 @@
  */
 
 
+typedef struct
+{
+	volatile uint32_t CR;							// Clock Control Register                   ADDR_OFFSET:  0x00
+	volatile uint32_t PLLCFGR;                      // PLL Configuration rregister 		        ADDR_OFFSET:  0x04
+	volatile uint32_t CFGR;							// Clock Configuration register 			ADDR_OFFSET:  0x08
+	volatile uint32_t CIR;							// Clock Interrupt register 				ADDR_OFFSET:  0x0C
+	volatile uint32_t AHB1RSTR;						// AHN1 Peripheral reset register 			ADDR_OFFSET:  0x10
+	volatile uint32_t AHB2RSTR;						// AHN2 Peripheral reset register 			ADDR_OFFSET:  0x14
+	volatile uint32_t reserved0;					// reserved									ADDR_OFFSET:  0x18
+	volatile uint32_t reserved1;					// reserved									ADDR_OFFSET:  0x1C
+	volatile uint32_t APB1RSTR;						// APB1 peropheral reset register 			ADDR_OFFSET:  0x20
+	volatile uint32_t APB2RSTR;						// APB2 peripheral reset register 			ADDR_OFFSET:  0x24
+	volatile uint32_t reserved2;					// reserved									ADDR_OFFSET:  0x28
+	volatile uint32_t reserved3;					// reserved									ADDR_OFFSET:  0x2C
+	volatile uint32_t AHB1ENR;						// AHB1 peripheral clock enable register 	ADDR_OFFSET:  0x30
+	volatile uint32_t AHB2ENR;						// AHB2 peripheral clock enalble register   ADDR_OFFSET:  0x34
+	volatile uint32_t reserved4;					// reserved 								ADDR_OFFSET:  0x38
+	volatile uint32_t reserved5;					// reserved									ADDR_OFFSET:  0x3C
+	volatile uint32_t APB1ENR;						// APB1 peripheral clock enable register    ADDR_OFFSET:  0x40
+	volatile uint32_t APB2ENR;						// APB2 peripheral clock enable register 	ADDR_OFFSET:  0x44
+ 	volatile uint32_t reserved6;					// reserved									ADDR_OFFSET:  0x48
+	volatile uint32_t reserved7;					// reserved									ADDR_OFFSET:  0x4C
+	volatile uint32_t AHB1LPENR;					// AHB1 clock enable low power register 	ADDR_OFFSET:  0x50
+	volatile uint32_t AHB2LPENR;					// AHB2 clock enable low power register		ADDR_OFFSET:  0x54
+	volatile uint32_t reserved8;					// reserved									ADDR_OFFSET:  0x58
+	volatile uint32_t reserved9;					// reserved									ADDR_OFFSET:  0x5C
+	volatile uint32_t APB1LPENR;					// APB1 clock enable low power register		ADDR_OFFSET:  0x60
+	volatile uint32_t APB2LPENR;					// APB2 clock enable low power register		ADDR_OFFSET:  0x64
+	volatile uint32_t reserved10;					// reserved									ADDR_OFFSET:  0x68
+	volatile uint32_t reserved11;					// reserved									ADDR_OFFSET:  0x6C
+	volatile uint32_t BDCR;							// Backup domain control register			ADDR_OFFSET:  0x70
+	volatile uint32_t CSR;							// clock control & status register			ADDR_OFFSET:  0x74
+	volatile uint32_t reserved12;
+	volatile uint32_t reserverd13;
+	volatile uint32_t SSCGR;
+	volatile uint32_t PLLI2SCFGR;
+	volatile uint32_t reserved14;
+	volatile uint32_t DCKCFGR;
 
+} RCC_RegDef_t;
+
+/*Como se vio en la clase de introduccion de las estructuras, hacemos un puntero a RCC_RegDef_t que
+ * apunta a la posicion exavta del periferico RCC, de forma que cada miembro de la estructura coincide
+ * con cada uno de los SRF en la memoria del MCU. Esta accion la estamos haciendo en un MACRO, de forma que el
+ * nuevo elemento "RCC" queda disponible para cada clse .c (Archivo .c) que incluya este archivo
+ *
+ */
+#define RCC ((RCC_RegDef_t * ) RCC_BASE_ADDR)
 
 
 
