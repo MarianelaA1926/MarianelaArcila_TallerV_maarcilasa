@@ -3,8 +3,7 @@
  *
  *  Created on: 10/03/2023
  *      Author: marianela
- *  Este programa se encarga de las definiciones relacionadas unicament
- *  con el debido manejo y control del periferico GPIOx(Funciones del controlador)
+ *  This program is responsible for defining the control of the GPIOx peripheral. (control funtions)
  */
 
 #ifndef GPIOXDRIVER_H_
