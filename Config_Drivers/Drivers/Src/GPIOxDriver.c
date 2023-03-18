@@ -49,7 +49,7 @@ void GPIO_Config (GPIO_Handler_t *pGPIOHandler ){
 	// For GPIOH
 	else if(pGPIOHandler -> pGPIOx == GPIOH	){
 	// We write 1 (SET)  in the position corresponds to GPIOH
-		RCC -> AHB1ENR |= (SET << RCC_AHB1ENR_GPIOHEN);
+		RCC -> AHB1ENR |= (SET << RCC_AHB1ENR_GPIOHEN_Pos);
 	}
 
 	/* Then we star to configure the  GPIO registers*/

@@ -12,6 +12,8 @@
 #include <stm32f4xx.h>
 
 
+
+
 /* These are the standard values for the configuration */
 /* 8.4.1 GPIOx_MODER (Two bits for the Pin) */
 
