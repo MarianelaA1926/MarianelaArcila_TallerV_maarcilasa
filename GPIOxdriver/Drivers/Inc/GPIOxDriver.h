@@ -2,7 +2,7 @@
  * GPIOxDriver.h
  *
  *  Created on: 10/03/2023
- *      Author: marianela
+ *      Author: Marianela Arcila Sanchez		maarcilasa
  *  This program is responsible for defining the control of the GPIOx peripheral. (control funtions)
  */
 
@@ -12,38 +12,38 @@
 #include <stm32f4xx.h>
 
 
-/* Valores estandar para las configuraciones */
-/* 8.4.1 GPIOx_MODER (dos bit por cada PIN) */
+/* These are the standard values for the configuration */
+/* 8.4.1 GPIOx_MODER (Two bits for the Pin) */
 
 #define GPIO_MODE_IN                0
 #define GPIO_MODE_OUT				1
 #define GPIO_MODE_ALTFN				2
 #define GPIO_MODE_ANALOG			3
 
-/* 8.4.2 GPIOx_OTYPER (un bit por PIN)*/
+/* 8.4.2 GPIOx_OTYPER (_One bit for PIN)*/
 
 #define GPIO_OTYPE_PUSHPULL     0
 #define GPIO_OTYPE_OPENDRAIN	1
 
-/*8.4.3 GPIOx_OSPEEDR (dos bit por cada PIN) */
+/*8.4.3 GPIOx_OSPEEDR (Two bits for the Pin) */
 #define GPIO_OSPEED_LOW  		0
 #define GPIO_OSPEED_MEDIUM		1
 #define GPIO_OSPEED_FAST		2
 #define GPIO_OSPEED_HIGH		3
 
-/* 8.4.4 GPIOx_PUPDR (dos bits por cada PIN) */
+/* 8.4.4 GPIOx_PUPDR (Two bits for the Pin) */
 #define GPIO_PUPDR_NOTHING       0
 #define GPIO_PUPDR_PULLUP		 1
 #define GPIO_PUPDR_PULLDOWN		 2
 #define GPIO_PUPDR_RESERVED		 3
 
-/* 8.4.5 GPIOx_IDR( un bit por PIN) - este es el registro para leer el estado del pin */
+/* 8.4.5 GPIOx_IDR( One bit for PIN) - This register is used to read the state of the pin. */
 
-/*8.4.6 GPIOx_ODR (un bit por PIN) este es el registro para escribir el estado de un PIN (1 o 0).
- *Este registro puede ser escrito y leido desde el software, pero no garantiza una escritura "atomica"
- *por la cual es preferible el registro BSRR */
+/*8.4.6 GPIOx_ODR (un bit por PIN) This register is used to read the state of the pin.(1 o 0).
+ *"This register can be written to and read from using software, but it doesn't support 'atomic write'.
+ *This is why we use the BSRR register." */
 
-/* Definicion de los nombres de los pines */
+/*Pin names */
 
 #define PIN_0
 #define PIN_1
@@ -62,7 +62,7 @@
 #define PIN_14
 #define PIN_15
 
-/* Definicion de las funciones alternativas */
+/* Alternative Funtions */
 
 #define AF0				0b0000
 #define AF1             0b0001
@@ -83,29 +83,30 @@
 
 typedef struct{
 
-	uint8_t GPIO_PinNumber; 			// Pin con el que deseamos trabajar
-	uint8_t GPIO_PinMode;  				// Modo de la configuracion: entrada, salida, analogo, f.alternativa
-	uint8_t GPIO_PinSpeed; 				// Velocidad de respuesta del IN (Solo para digital)
-	uint8_t GPIO_PinPuPdControl; 		// Seleccionamos si deseamos una salida Pull-up, Pull-down, o "Libre"
-	uint8_t GPIO_PinOPType;				//Trabaja de la mano con el anterior, selecciona salida PUPD o OpenDrain
-	uint8_t GPIO_PinAltFunMode;			// Selecciona cual es la funcion alternativa que se esta configurando
+	uint8_t GPIO_PinNumber; 			// Pin which we use to work
+	uint8_t GPIO_PinMode;  				// mode to configuration: input, output, mode analog, alternative function
+	uint8_t GPIO_PinSpeed; 				// Speed to response (only for digital mode)
+	uint8_t GPIO_PinPuPdControl; 		// if we need an output with Pull-up Pull-down  or free
+	uint8_t GPIO_PinOPType;				//Select the output with PUPD or OpenDrain.
+	uint8_t GPIO_PinAltFunMode;			// Select the alternative function
 }GPIO_PinConfig_t;
 
 
 /*
- * Esta es una estructura que contiene dos elementos:
- * -La direccion del puerto que se esta utilizandio (La referencua al puerto)
- * -La configuracion especifica del PIN que se esta utilizando
+ * "This structure contains two elements:
+
+    The address used in the port
+    The configuration specific to the pin that we can use
  */
 
 typedef struct{
-	GPIO_TypeDef			*pGPIOx;     			/* !< Direccion del puerto al que el PIN corresponde >*/
-	GPIO_PinConfig_t 		GPIO_PinConfig; 		/*!< Configuracion del PIN >*/
+	GPIO_TypeDef			*pGPIOx;     			/* !< Address of the port to which the PIN corresponds >*/
+	GPIO_PinConfig_t 		GPIO_PinConfig; 		/*!< PIN configuration >*/
 
 }GPIO_Handler_t;
 
 
-/* Definicion de las cabeceras de las funciones del GPIOxDriver */
+/* Definition of the headers of the GPIOxDriver functions */
 
 void GPIO_Config (GPIO_Handler_t * pGPIOHandler);
 void GPIO_WritePin(GPIO_Handler_t *pPinHandler, uint8_t newState);
