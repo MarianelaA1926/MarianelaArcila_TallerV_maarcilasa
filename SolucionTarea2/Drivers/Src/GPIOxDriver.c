@@ -193,7 +193,7 @@ uint32_t GPIO_ReadPin(GPIO_Handler_t *pPinHandler){
 	 * then shift it to the right. This register is used to store information
 	 * when the pin is an input.*/
 	pinValue = (pPinHandler -> pGPIOx -> IDR >> pPinHandler -> GPIO_PinConfig.GPIO_PinNumber);
-	pinValue &= ~(0xFFFE);
+	pinValue &= 0b1;
 	return pinValue;
 
 }
