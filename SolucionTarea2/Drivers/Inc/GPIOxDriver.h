@@ -13,6 +13,39 @@
 
 
 
+typedef struct{
+
+	uint8_t GPIO_PinNumber; 			// Pin which we use to work
+	uint8_t GPIO_PinMode;  				// mode to configuration: input, output, mode analog, alternative function
+	uint8_t GPIO_PinSpeed; 				// Speed to response (only for digital mode)
+	uint8_t GPIO_PinPuPdControl; 		// if we need an output with Pull-up Pull-down  or free
+	uint8_t GPIO_PinOPType;				//Select the output with PUPD or OpenDrain.
+	uint8_t GPIO_PinAltFunMode;			// Select the alternative function
+}GPIO_PinConfig_t;
+
+
+/*
+ * "This structure contains two elements:
+
+    The address used in the port
+    The configuration specific to the pin that we can use
+ */
+
+typedef struct{
+	GPIO_TypeDef			*pGPIOx;     			/* !< Address of the port to which the PIN corresponds >*/
+	GPIO_PinConfig_t 		GPIO_PinConfig; 		/*!< PIN configuration >*/
+
+}GPIO_Handler_t;
+
+
+/* Definition of the headers of the GPIOxDriver functions */
+
+void GPIO_Config (GPIO_Handler_t * pGPIOHandler);
+void GPIO_WritePin(GPIO_Handler_t *pPinHandler, uint8_t newState);
+uint32_t GPIO_ReadPin(GPIO_Handler_t *pPinHandler);
+
+
+
 
 /* These are the standard values for the configuration */
 /* 8.4.1 GPIOx_MODER (Two bits for the Pin) */
@@ -47,22 +80,22 @@
 
 /*Pin names */
 
-#define PIN_0
-#define PIN_1
-#define PIN_2
-#define PIN_3
-#define PIN_4
-#define PIN_5
-#define PIN_6
-#define PIN_7
-#define PIN_8
-#define PIN_9
-#define PIN_10
-#define PIN_11
-#define PIN_12
-#define PIN_13
-#define PIN_14
-#define PIN_15
+#define PIN_0				0
+#define PIN_1				1
+#define PIN_2				2
+#define PIN_3				3
+#define PIN_4				4
+#define PIN_5				5
+#define PIN_6				6
+#define PIN_7				7
+#define PIN_8				8
+#define PIN_9				9
+#define PIN_10				10
+#define PIN_11				11
+#define PIN_12				12
+#define PIN_13				13
+#define PIN_14				14
+#define PIN_15				15
 
 /* Alternative Funtions */
 
@@ -82,39 +115,6 @@
 #define AF13			0b1101
 #define AF14			0b1110
 #define AF15			0b1111
-
-typedef struct{
-
-	uint8_t GPIO_PinNumber; 			// Pin which we use to work
-	uint8_t GPIO_PinMode;  				// mode to configuration: input, output, mode analog, alternative function
-	uint8_t GPIO_PinSpeed; 				// Speed to response (only for digital mode)
-	uint8_t GPIO_PinPuPdControl; 		// if we need an output with Pull-up Pull-down  or free
-	uint8_t GPIO_PinOPType;				//Select the output with PUPD or OpenDrain.
-	uint8_t GPIO_PinAltFunMode;			// Select the alternative function
-}GPIO_PinConfig_t;
-
-
-/*
- * "This structure contains two elements:
-
-    The address used in the port
-    The configuration specific to the pin that we can use
- */
-
-typedef struct{
-	GPIO_TypeDef			*pGPIOx;     			/* !< Address of the port to which the PIN corresponds >*/
-	GPIO_PinConfig_t 		GPIO_PinConfig; 		/*!< PIN configuration >*/
-
-}GPIO_Handler_t;
-
-
-/* Definition of the headers of the GPIOxDriver functions */
-
-void GPIO_Config (GPIO_Handler_t * pGPIOHandler);
-void GPIO_WritePin(GPIO_Handler_t *pPinHandler, uint8_t newState);
-uint32_t GPIO_ReadPin(GPIO_Handler_t *pPinHandler);
-
-
 
 
 

@@ -23,11 +23,12 @@ void InitSystem(void);
  *
  *    To correct this problem, we need to clear the other positions after selecting the corresponding
  *    value for the pin in PinValue using a Bitwise AND operation (GPIOxDriver.c)
+ *	  This way, we can read the least significant bit.
  *    PinValue &= 0b1
  *
  */
 
-/* 2) The Toggle function will be used to change the state. In order for this function to be general
+/* 2) The Toogle function will be used to change the state. In order for this function to be general
  *    and reusable in other projects, we will write it in the GPIOxDriver.c file,
  *    and we call the function in the main*/
 
@@ -37,33 +38,42 @@ void InitSystem(void);
 // We define and initialize the handlers that we need
 GPIO_Handler_t handlerToogleTestLed = {0};
 
+
 void InitSystem(void){
-	// Configurando el pin para el Led_Blinky
-	handlerToogleTestLed.pGPIOx 								= GPIOA;
-	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinNumber          = PIN_5 ;
+
+	// this is the configuration of Led_TestToogle,
+	handlerToogleTestLed.pGPIOx									= GPIOA;
+	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinNumber 			=PIN_5;
 	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
 	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
 	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEED_FAST;
 	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_NOTHING;
 
-
-
-
-
-
-
-
-
+	// We load the configuration to the LED
+	GPIO_Config(&handlerToogleTestLed);
+	//We write one in the register to check the GPIO_ReadPin
+	GPIO_WritePin(&handlerToogleTestLed, SET);
 }
 
 
 
-
+/*To test the 'toggle' and 'read' functions, we use the LD2 LED. This green LED is
+ * connected to pin A5, so we configure pin 5 in the peripheral GPIOA.
+ */
 
 
 
 int main(void)
 {
+	// We call the prototype functions with the pin configuration.
+	InitSystem();
+
+
+	//We need to check that the GPIO_ReadPin function is working properly
+	GPIO_ReadPin(&handlerToogleTestLed);
+
+
+
     while(1){
 
     }
