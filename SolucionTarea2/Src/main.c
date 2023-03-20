@@ -15,6 +15,7 @@
 
 /* We define the prototypes functions */
 void InitSystem(void);
+void delay(int seconds);
 
 /*We define the point one and two function*/
 
@@ -65,7 +66,7 @@ void InitSystem(void){
 	GPIO_Config(&handlerToogleTestLed);
 
 	//We write in the register to activate the GREN LED and check the GPIO_ReadPin and Toogle function
-	GPIO_WritePin(&handlerToogleTestLed, SET);
+	//GPIO_WritePin(&handlerToogleTestLed, SET);
 
 //============================================== Task Point three================================================
 
@@ -75,7 +76,7 @@ void InitSystem(void){
 	handlerLedC9.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
 	handlerLedC9.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
 	handlerLedC9.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEED_FAST;
-	handlerLedC9.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_PULLUP;
+	handlerLedC9.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_PULLDOWN;
 	// We load the configuration to the LED
 	GPIO_Config(&handlerLedC9);
 
@@ -165,13 +166,13 @@ void InitSystem(void){
 
 
 	// this is the configuration of Buttom Blue Pin C13
-	handlerUserButtomBlue.pGPIOx = 									GPIOC;
-	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinNumber = 			PIN_13;
-	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinMode =				GPIO_MODE_IN;
-	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinOPType = 			GPIO_OTYPE_OPENDRAIN;
-	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinPuPdControl = 		GPIO_PUPDR_NOTHING;
-	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinSpeed = 			GPIO_OSPEED_MEDIUM;
-
+	handlerUserButtomBlue.pGPIOx 									=GPIOC;
+	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinNumber  			=PIN_13;
+	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinMode 				=GPIO_MODE_IN;
+	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinOPType  			=GPIO_OTYPE_OPENDRAIN;
+	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinPuPdControl  		=GPIO_PUPDR_NOTHING;
+	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinSpeed  			=GPIO_OSPEED_MEDIUM;
+	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinAltFunMode 		= AF0;
 	//Cargamos la configuración del pin específico
 	GPIO_Config(&handlerUserButtomBlue);
 
@@ -193,28 +194,65 @@ int main(void)
 	 */
 
 	//We need to check that the GPIO_ReadPin function is working properly
-	GPIO_ReadPin(&handlerToogleTestLed);
+	//GPIO_ReadPin(&handlerToogleTestLed);
 
 	/*We call the toggle function to activate or deactivate the green
 	LED according to the state written in the GPIO_WritePin function.*/
-	GPIOxTooglePin(&handlerToogleTestLed);
+	//GPIOxTooglePin(&handlerToogleTestLed);
 
 //============================= task point tree ============================================0
 
 
 
 
+	//uint32_t count = 0;
 
-    while(1){
+	uint32_t bootomState = 0;
 
-    }
-    return 0;
+
+	bootomState= GPIO_ReadPin(&handlerUserButtomBlue);
+	if(bootomState == SET){
+		//Encendemos los lends
+		GPIO_WritePin(&handlerLedC9, SET);
+		delay(10);
+		GPIO_WritePin(&handlerLedC6, SET);
+		delay(100);
+		GPIO_WritePin(&handlerLedB8, SET);
+		delay(100);
+		GPIO_WritePin(&handlerLedA6, SET);
+		delay(100);
+		GPIO_WritePin(&handlerLedC7, SET);
+		delay(100);
+		GPIO_WritePin(&handlerLedC8, SET);
+		delay(100);
+		GPIO_WritePin(&handlerLedA7, SET);
+
+	}
+	else{
+	//Encendemos los lends
+		GPIO_WritePin(&handlerLedC9, SET);
+		delay(100000);
+		GPIO_WritePin(&handlerLedC9, RESET);
+		delay(100000);
+		GPIO_WritePin(&handlerLedB8, RESET);
+		delay(100);
+		GPIO_WritePin(&handlerLedA6, RESET);
+		delay(100);
+		GPIO_WritePin(&handlerLedC7, RESET);
+		delay(100);
+		GPIO_WritePin(&handlerLedC8, RESET);
+		delay(100);
+		GPIO_WritePin(&handlerLedA7, RESET);
+	}
+
+
+
 }
 
 
 //We create a new  variable  that introduces a one-second delay
 
-void delay(int seconds){
+void delay(void){
 
 /* 	If the processor executes at least 1 billion
  *  cycles per second, we need 10 billion iterations in the for loop.
@@ -222,15 +260,23 @@ void delay(int seconds){
  */
 
 
-
-	int delay = seconds * 1000000000;
+	int count = 0;
 
 	//
-	for (int i = 0; i< delay; i++){
+	for (int i = 0; i< 1000000; i++){
+
 
 	}
+	count += seconds;
+
+	if (count > 60){
+		count = 1;
+	}
+	else {
+		count = 60;
+	}
+
+
 }
-
-
 
 
