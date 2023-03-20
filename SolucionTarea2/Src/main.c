@@ -17,6 +17,7 @@
 void InitSystem(void);
 void delay(int seconds);
 
+
 /*We define the point one and two function*/
 
 /* 1) "The GPIO_ReadPin function reads the status of a specific pin. However,
@@ -194,57 +195,59 @@ int main(void)
 	 */
 
 	//We need to check that the GPIO_ReadPin function is working properly
-	//GPIO_ReadPin(&handlerToogleTestLed);
+	GPIO_ReadPin(&handlerToogleTestLed);
 
 	/*We call the toggle function to activate or deactivate the green
 	LED according to the state written in the GPIO_WritePin function.*/
-	//GPIOxTooglePin(&handlerToogleTestLed);
+	GPIOxTooglePin(&handlerToogleTestLed);
 
 //============================= task point tree ============================================0
 
+	int count = 1;
+	// the count starts at 1 so that the LED starts activated
+	while(1){
+
+	/*We call the function and write the count, the idea is that
+	 * the system reactivates every 60 if we press the blue button,
+	 *  the count starts at 1 and ends at 60
+	 *  But if we don't press it, the counter
+	 *   starts at 60 and ends at 1
+	 */
+
+		GPIO_WritePin(&handlerLedC9, count);
+		GPIO_WritePin(&handlerLedC6, count);
+		GPIO_WritePin(&handlerLedB8, count);
+		GPIO_WritePin(&handlerLedA6, count);
+		GPIO_WritePin(&handlerLedC7, count);
+		GPIO_WritePin(&handlerLedC8, count);
+		GPIO_WritePin(&handlerLedA7, count);
+
+		// we call the delay of 1
+		delay(1);
+		// we generate the count up to 60
 
 
+		if(count > 60){
+			count = 1;
+		} else if (count < 1){
+			count = 60;
+		}
 
-	//uint32_t count = 0;
-
-	uint32_t bootomState = 0;
+		// 	We create the condition that it increases and decreases according to the state of the button
 
 
-	bootomState= GPIO_ReadPin(&handlerUserButtomBlue);
-	if(bootomState == SET){
-		//Encendemos los lends
-		GPIO_WritePin(&handlerLedC9, SET);
-		delay(10);
-		GPIO_WritePin(&handlerLedC6, SET);
-		delay(100);
-		GPIO_WritePin(&handlerLedB8, SET);
-		delay(100);
-		GPIO_WritePin(&handlerLedA6, SET);
-		delay(100);
-		GPIO_WritePin(&handlerLedC7, SET);
-		delay(100);
-		GPIO_WritePin(&handlerLedC8, SET);
-		delay(100);
-		GPIO_WritePin(&handlerLedA7, SET);
+		uint32_t button_Pressed = GPIO_ReadPin(&handlerUserButtomBlue);
+		if (button_Pressed == RESET){
+
+			count --;
+		}
+		else {
+
+			count ++;
+		}
+
 
 	}
-	else{
-	//Encendemos los lends
-		GPIO_WritePin(&handlerLedC9, SET);
-		delay(100000);
-		GPIO_WritePin(&handlerLedC9, RESET);
-		delay(100000);
-		GPIO_WritePin(&handlerLedB8, RESET);
-		delay(100);
-		GPIO_WritePin(&handlerLedA6, RESET);
-		delay(100);
-		GPIO_WritePin(&handlerLedC7, RESET);
-		delay(100);
-		GPIO_WritePin(&handlerLedC8, RESET);
-		delay(100);
-		GPIO_WritePin(&handlerLedA7, RESET);
-	}
-
 
 
 }
@@ -252,31 +255,18 @@ int main(void)
 
 //We create a new  variable  that introduces a one-second delay
 
-void delay(void){
+void delay(int seconds){
 
 /* 	If the processor executes at least 1 billion
  *  cycles per second, we need 10 billion iterations in the for loop.
  *  The seconds variable is where the time the user wants to delay is stored.
  */
+	// for cycle
 
-
-	int count = 0;
-
-	//
-	for (int i = 0; i< 1000000; i++){
+	for (int i = 0; i< seconds * 1000000; i++){
 
 
 	}
-	count += seconds;
-
-	if (count > 60){
-		count = 1;
-	}
-	else {
-		count = 60;
-	}
-
-
 }
 
 
