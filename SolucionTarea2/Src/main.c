@@ -16,6 +16,8 @@
 /* We define the prototypes functions */
 void InitSystem(void);
 
+/*We define the point one and two function*/
+
 /* 1) "The GPIO_ReadPin function reads the status of a specific pin. However,
  *     it contains an error since it only moves the corresponding value selected by the user.
  *     We also need to shift the values of the other pins that were activated before the selected pin.
@@ -37,24 +39,141 @@ void InitSystem(void);
 
 // We define and initialize the handlers that we need
 GPIO_Handler_t handlerToogleTestLed = {0};
+GPIO_Handler_t handlerLedC9 = {0};
+GPIO_Handler_t handlerLedC6 = {0};
+GPIO_Handler_t handlerLedB8 = {0};
+GPIO_Handler_t handlerLedA6 = {0};
+GPIO_Handler_t handlerLedC7 = {0};
+GPIO_Handler_t handlerLedC8 = {0};
+GPIO_Handler_t handlerLedA7 = {0};
+GPIO_Handler_t handlerUserButtomBlue = {0};
+
+
 
 
 void InitSystem(void){
 
 	// this is the configuration of Led_TestToogle,
 	handlerToogleTestLed.pGPIOx									= GPIOA;
-	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinNumber 			=PIN_5;
+	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinNumber 			= PIN_5;
 	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
 	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
 	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEED_FAST;
-	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_NOTHING;
+	handlerToogleTestLed.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_PULLUP;
 
 	// We load the configuration to the LED
 	GPIO_Config(&handlerToogleTestLed);
-	//We write in the register to activate the GREN LED and check the GPIO_ReadPin
+
+	//We write in the register to activate the GREN LED and check the GPIO_ReadPin and Toogle function
 	GPIO_WritePin(&handlerToogleTestLed, SET);
 
+//============================================== Task Point three================================================
 
+	// this is the configuration of PC9,
+	handlerLedC9.pGPIOx									= GPIOC;
+	handlerLedC9.GPIO_PinConfig.GPIO_PinNumber 			= PIN_9;
+	handlerLedC9.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
+	handlerLedC9.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
+	handlerLedC9.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEED_FAST;
+	handlerLedC9.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_PULLUP;
+	// We load the configuration to the LED
+	GPIO_Config(&handlerLedC9);
+
+
+
+
+	// this is the configuration of PC6,
+	handlerLedC6.pGPIOx									= GPIOC;
+	handlerLedC6.GPIO_PinConfig.GPIO_PinNumber 			= PIN_6;
+	handlerLedC6.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
+	handlerLedC6.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
+	handlerLedC6.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEED_FAST;
+	handlerLedC6.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_PULLUP;
+
+	//We load the configuration to the LED
+	GPIO_Config(&handlerLedC6);
+
+
+
+
+	// this is the configuration of PB8,
+	handlerLedB8.pGPIOx									= GPIOB;
+	handlerLedB8.GPIO_PinConfig.GPIO_PinNumber 			= PIN_8;
+	handlerLedB8.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
+	handlerLedB8.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
+	handlerLedB8.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEED_FAST;
+	handlerLedB8.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_PULLUP;
+
+	//We load the configuration to the LED
+	GPIO_Config(&handlerLedB8);
+
+
+
+
+	// this is the configuration of PA6,
+	handlerLedA6.pGPIOx									= GPIOA;
+	handlerLedA6.GPIO_PinConfig.GPIO_PinNumber 			= PIN_6;
+	handlerLedA6.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
+	handlerLedA6.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
+	handlerLedA6.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEED_FAST;
+	handlerLedA6.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_PULLUP;
+
+	//We load the configuration to the LED
+	GPIO_Config(&handlerLedA6);
+
+
+
+
+	// this is the configuration of PC7,
+	handlerLedC7.pGPIOx									= GPIOC;
+	handlerLedC7.GPIO_PinConfig.GPIO_PinNumber 			= PIN_7;
+	handlerLedC7.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
+	handlerLedC7.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
+	handlerLedC7.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEED_FAST;
+	handlerLedC7.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_PULLUP;
+
+	//We load the configuration to the LED
+	GPIO_Config(&handlerLedC7);
+
+
+
+	// this is the configuration of PC8,
+	handlerLedC8.pGPIOx									= GPIOC;
+	handlerLedC8.GPIO_PinConfig.GPIO_PinNumber 			= PIN_8;
+	handlerLedC8.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
+	handlerLedC8.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
+	handlerLedC8.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEED_FAST;
+	handlerLedC8.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_PULLUP;
+
+	//We load the configuration to the LED
+	GPIO_Config(&handlerLedC8);
+
+
+
+
+	// this is the configuration of PA7,
+	handlerLedA7.pGPIOx									= GPIOA;
+	handlerLedA7.GPIO_PinConfig.GPIO_PinNumber 			= PIN_7;
+	handlerLedA7.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
+	handlerLedA7.GPIO_PinConfig.GPIO_PinOPType			= GPIO_OTYPE_PUSHPULL;
+	handlerLedA7.GPIO_PinConfig.GPIO_PinSpeed			= GPIO_OSPEED_FAST;
+	handlerLedA7.GPIO_PinConfig.GPIO_PinPuPdControl		= GPIO_PUPDR_PULLUP;
+
+	//We load the configuration to the LED
+	GPIO_Config(&handlerLedA7);
+
+
+
+	// this is the configuration of Buttom Blue Pin C13
+	handlerUserButtomBlue.pGPIOx = 									GPIOC;
+	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinNumber = 			PIN_13;
+	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinMode =				GPIO_MODE_IN;
+	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinOPType = 			GPIO_OTYPE_OPENDRAIN;
+	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinPuPdControl = 		GPIO_PUPDR_NOTHING;
+	handlerUserButtomBlue.GPIO_PinConfig.GPIO_PinSpeed = 			GPIO_OSPEED_MEDIUM;
+
+	//Cargamos la configuración del pin específico
+	GPIO_Config(&handlerUserButtomBlue);
 
 }
 
@@ -80,6 +199,8 @@ int main(void)
 	LED according to the state written in the GPIO_WritePin function.*/
 	GPIOxTooglePin(&handlerToogleTestLed);
 
+//============================= task point tree ============================================0
+
 
 
 
@@ -89,3 +210,27 @@ int main(void)
     }
     return 0;
 }
+
+
+//We create a new  variable  that introduces a one-second delay
+
+void delay(int seconds){
+
+/* 	If the processor executes at least 1 billion
+ *  cycles per second, we need 10 billion iterations in the for loop.
+ *  The seconds variable is where the time the user wants to delay is stored.
+ */
+
+
+
+	int delay = seconds * 1000000000;
+
+	//
+	for (int i = 0; i< delay; i++){
+
+	}
+}
+
+
+
+
