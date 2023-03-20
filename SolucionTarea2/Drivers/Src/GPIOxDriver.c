@@ -193,18 +193,53 @@ void GPIO_WritePin(GPIO_Handler_t *pPinHandler, uint8_t newState){
 
 uint32_t GPIO_ReadPin(GPIO_Handler_t *pPinHandler){
 	//create a new auxiliary variable
-	uint32_t pinValue = 0;
+	uint32_t pinValue = {0};
 
 	/*We load the value into the GPIOx_IDR,
 	 *
 	 * then shift it to the right. This register is used to store information
 	 * when the pin is an input.*/
 	pinValue = (pPinHandler -> pGPIOx -> IDR >> pPinHandler -> GPIO_PinConfig.GPIO_PinNumber);
-	/*/ We can see 0 or 1. The value changes depending on whether the HAL_GPIO_WritePin
+	/* We can see 0 or 1. The value changes depending on whether the HAL_GPIO_WritePin
 	function writes a 0 or 1 to the pin.
 	*/
 	pinValue &= 0b1;
 	return pinValue;
+
+}
+
+void GPIOxTooglePin(GPIO_Handler_t *pPinHandler){
+
+
+	//We create a new variable to store the state of the pin.
+	uint32_t pinState = {0};
+	// We create a new variable to store the operation XOR
+	uint32_t toogle		= {0};
+
+	/* To Determine the state of the pin, the value in the
+	 * IDR register is read, and a Bitwise AND operation is
+	 * performed to extract only the least significant bit
+	 */
+
+	pinState = (pPinHandler -> pGPIOx -> IDR >> pPinHandler -> GPIO_PinConfig.GPIO_PinNumber) & 0b1;
+
+	//We assign the value after the XOR operation
+	toogle = (pinState ^= SET) ;
+
+	/* If the pin state is 1, the variable 'toggle' is set to 0, the green LED is deactivated,
+	 * and the state is changed. Conversely, if the pin state is 0, the variable 'toggle' is set
+	 * to 1, the green LED is activated, and the state is changed again.
+	 */
+
+	if (toogle == SET){
+
+		// We change the position we need
+		pPinHandler ->pGPIOx ->ODR |=(SET << pPinHandler -> GPIO_PinConfig.GPIO_PinNumber);
+	}
+	else{
+		// We change the position we need
+		pPinHandler ->pGPIOx ->ODR &= ~(SET << pPinHandler -> GPIO_PinConfig.GPIO_PinNumber);
+	}
 
 }
 

@@ -51,15 +51,15 @@ void InitSystem(void){
 
 	// We load the configuration to the LED
 	GPIO_Config(&handlerToogleTestLed);
-	//We write one in the register to check the GPIO_ReadPin
+	//We write in the register to activate the GREN LED and check the GPIO_ReadPin
 	GPIO_WritePin(&handlerToogleTestLed, SET);
+
+
+
 }
 
 
 
-/*To test the 'toggle' and 'read' functions, we use the LD2 LED. This green LED is
- * connected to pin A5, so we configure pin 5 in the peripheral GPIOA.
- */
 
 
 
@@ -69,8 +69,18 @@ int main(void)
 	InitSystem();
 
 
+	/*To test  'read' and Toogle function, we use the LD2 LED. This green LED is
+	 * connected to pin A5, so we configure pin 5 in the peripheral GPIOA.
+	 */
+
 	//We need to check that the GPIO_ReadPin function is working properly
 	GPIO_ReadPin(&handlerToogleTestLed);
+
+	/*We call the toggle function to activate or deactivate the green
+	LED according to the state written in the GPIO_WritePin function.*/
+	GPIOxTooglePin(&handlerToogleTestLed);
+
+
 
 
 
