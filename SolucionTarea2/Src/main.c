@@ -67,7 +67,7 @@ void InitSystem(void){
 	GPIO_Config(&handlerToogleTestLed);
 
 	//We write in the register to activate the GREN LED and check the GPIO_ReadPin and Toogle function
-	//GPIO_WritePin(&handlerToogleTestLed, SET);
+	GPIO_WritePin(&handlerToogleTestLed, SET);
 
 //============================================== Task Point three================================================
 
