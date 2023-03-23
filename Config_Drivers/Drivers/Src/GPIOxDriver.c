@@ -191,6 +191,23 @@ void GPIO_WritePin(GPIO_Handler_t *pPinHandler, uint8_t newState){
 
 
 
+uint32_t GPIO_ReadPin(GPIO_Handler_t *pPinHandler){
+	//create a new auxiliary variable
+	uint32_t pinValue = {0};
+
+	/*We load the value into the GPIOx_IDR,
+	 *
+	 * then shift it to the right. This register is used to store information
+	 * when the pin is an input.*/
+	pinValue = (pPinHandler -> pGPIOx -> IDR >> pPinHandler -> GPIO_PinConfig.GPIO_PinNumber);
+	/* We can see 0 or 1. The value changes depending on whether the HAL_GPIO_WritePin
+	function writes a 0 or 1 to the pin.
+	*/
+	pinValue &= 0b1;
+	return pinValue;
+
+}
+
 void GPIOxTooglePin(GPIO_Handler_t *pPinHandler){
 
 
@@ -225,3 +242,5 @@ void GPIOxTooglePin(GPIO_Handler_t *pPinHandler){
 	}
 
 }
+
+
