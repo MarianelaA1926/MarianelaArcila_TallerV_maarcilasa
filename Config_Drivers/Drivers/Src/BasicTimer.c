@@ -36,30 +36,40 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 		// We write 1 (SET)  in the position corresponds to TIM2
 		RCC -> APB1ENR |= (SET << RCC_APB1ENR_TIM2EN);
 	}
-	if(ptrBTimerHandler -> ptrTIMx == TIM3){
+	else if(ptrBTimerHandler -> ptrTIMx == TIM3){
 			// We write 1 (SET)  in the position corresponds to TIM3
 			RCC -> APB1ENR |= (SET << RCC_APB1ENR_TIM3EN);
 	}
-	if(ptrBTimerHandler -> ptrTIMx == TIM4){
+	else if(ptrBTimerHandler -> ptrTIMx == TIM4){
 			// We write 1 (SET)  in the position corresponds to TIM4
 			RCC -> APB1ENR |= (SET << RCC_APB1ENR_TIM4EN);
 	}
-	if(ptrBTimerHandler -> ptrTIMx == TIM5){
+	else if(ptrBTimerHandler -> ptrTIMx == TIM5){
 			// We write 1 (SET)  in the position corresponds to TIM5
 			RCC -> APB1ENR |= (SET << RCC_APB1ENR_TIM5EN);
 	}
-	if(ptrBTimerHandler -> ptrTIMx == TIM9){
+	else if(ptrBTimerHandler -> ptrTIMx == TIM9){
 			// We write 1 (SET)  in the position corresponds to TIM10
 			RCC -> APB2ENR |= (SET << RCC_APB2ENR_TIM9EN);
 	}
-	if(ptrBTimerHandler -> ptrTIMx == TIM10){
+	else if(ptrBTimerHandler -> ptrTIMx == TIM10){
 			// We write 1 (SET)  in the position corresponds to TIM2
 			RCC -> APB2ENR |= (SET << RCC_APB2ENR_TIM10EN);
 	}
-	if(ptrBTimerHandler -> ptrTIMx == TIM11){
+	else if(ptrBTimerHandler -> ptrTIMx == TIM11){
 			// We write 1 (SET)  in the position corresponds to TIM2
 			RCC -> APB1ENR |= (SET << RCC_APB2ENR_TIM9EN);
 	}
+	else{
+			__NOP();
+	}
+
+	/* The third step is to configure the prescaler. We use the PSC register
+	 * to divide the frequency of the clock signal and obtain a timer with a
+	 * frequency that is higher or lower than the original signal, depending
+	 * on the value loaded into the PSC register. */
+	ptrBTimerHandler -> ptrTIMx -> PSC = ptrBTimerHandler ->TIMx_Config.TIMx_speed;
+
 
 
 
