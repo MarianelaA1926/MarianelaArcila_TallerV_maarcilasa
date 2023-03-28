@@ -44,7 +44,7 @@ typedef struct{
 
 
 void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler);
-void BasicTimerX_Callback(void); /*This function overwrites the 'main' so the system works.
+void BasicTimerX_Callback(void); /*This function overwrites the 'main' so the system works.*/
 
 
 

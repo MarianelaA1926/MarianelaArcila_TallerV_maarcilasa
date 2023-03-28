@@ -48,18 +48,6 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 			// We write 1 (SET)  in the position corresponds to TIM5
 			RCC -> APB1ENR |= (SET << RCC_APB1ENR_TIM5EN);
 	}
-	else if(ptrBTimerHandler -> ptrTIMx == TIM9){
-			// We write 1 (SET)  in the position corresponds to TIM10
-			RCC -> APB2ENR |= (SET << RCC_APB2ENR_TIM9EN);
-	}
-	else if(ptrBTimerHandler -> ptrTIMx == TIM10){
-			// We write 1 (SET)  in the position corresponds to TIM2
-			RCC -> APB2ENR |= (SET << RCC_APB2ENR_TIM10EN);
-	}
-	else if(ptrBTimerHandler -> ptrTIMx == TIM11){
-			// We write 1 (SET)  in the position corresponds to TIM2
-			RCC -> APB1ENR |= (SET << RCC_APB2ENR_TIM9EN);
-	}
 	else{
 			__NOP();
 	}
@@ -70,6 +58,18 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 	 * on the value loaded into the PSC register. */
 	ptrBTimerHandler -> ptrTIMx -> PSC = ptrBTimerHandler ->TIMx_Config.TIMx_speed;
 
+	/*We choose the direction of the counter (up/down)*/
+	if(ptrBTimerHandler -> TIMx_Config.TIMx_mode == BTIMER_MODE_UP){
+
+		/* For a timer in count up mode, we need to define the ARR (Auto-Reload Register).
+		 * This sets the maximum value for the counter, and when the counter reaches this
+		 * maximum value, it automatically restarts to 0.*/
+		ptrBTimerHandler -> ptrTIMx -> ARR
+
+	}
+	else{
+
+	}
 
 
 
