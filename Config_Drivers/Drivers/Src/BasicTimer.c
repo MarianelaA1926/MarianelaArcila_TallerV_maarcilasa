@@ -61,13 +61,23 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 	/*We choose the direction of the counter (up/down)*/
 	if(ptrBTimerHandler -> TIMx_Config.TIMx_mode == BTIMER_MODE_UP){
 
+		/*First we configure the counter to count up whit the CR1-DIR register*/
+		ptrBTimerHandler -> ptrTIMx -> CR1 &= ~TIM_CR1_DIR;
+
 		/* For a timer in count up mode, we need to define the ARR (Auto-Reload Register).
 		 * This sets the maximum value for the counter, and when the counter reaches this
 		 * maximum value, it automatically restarts to 0.*/
-		ptrBTimerHandler -> ptrTIMx -> ARR
+		ptrBTimerHandler -> ptrTIMx -> ARR = ptrBTimerHandler -> TIMx_Config.TIMx_period -1;
+
+		/* To restart the counter, we need to configure the CNT (Counter) register. The CNT
+		 * register is used to count the number of pulses of the clock signal, and when we
+		 *  use this register with the ARR register, we define the maximum value that it can
+		 *  reach before automatically restarting*/
+		ptrBTimerHandler -> ptrTIMx -> CNT = 0;
 
 	}
 	else{
+
 
 	}
 
