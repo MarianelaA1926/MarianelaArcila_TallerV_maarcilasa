@@ -77,7 +77,16 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 	}
 	else{
+		/*We configure the Down Mode whit the CR1-DIR register in 1*/
+		ptrBTimerHandler -> ptrTIMx -> CR1 |= TIM_CR1_DIR;
 
+		/* Since the counter is in descending mode, we need to set the
+		 * counter cap using the ARR (Auto-Reload Register) register.*/
+		ptrBTimerHandler -> ptrTIMx -> ARR = 0;
+
+
+		/* we restart the maximun value whit the CNT register */
+		ptrBTimerHandler -> ptrTIMx -> CNT = ptrBTimerHandler -> TIMx_Config.TIMx_period -1;
 
 	}
 
