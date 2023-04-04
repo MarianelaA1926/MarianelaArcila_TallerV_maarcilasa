@@ -58,7 +58,7 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 	 * on the value loaded into the PSC register. */
 	ptrBTimerHandler -> ptrTIMx -> PSC = ptrBTimerHandler ->TIMx_Config.TIMx_speed;
 
-	/*We choose the direction of the counter (up/down)*/
+	/*In the fourth step we choose the direction of the counter (up/down)*/
 	if(ptrBTimerHandler -> TIMx_Config.TIMx_mode == BTIMER_MODE_UP){
 
 		/*First we configure the counter to count up whit the CR1-DIR register*/
@@ -89,6 +89,16 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 		ptrBTimerHandler -> ptrTIMx -> CNT = ptrBTimerHandler -> TIMx_Config.TIMx_period -1;
 
 	}
+
+	/*In the fifth step we configure the CR1-CEN register. With this register,
+	 * we can enable (1) or disable (0) the counter*/
+
+	ptrBTimerHandler -> ptrTIMx -> CR1 |= TIM_CR1_CEN;
+
+	/* The sixth step is to configure the DIER-UIE register. This register
+	 * allows you to modify the state of the interrupt update. (0 disabled, 1 enabled)*/
+
+	ptrBTimerHandler -> ptrTIMx -> DIER |= TIM_DIER_UIE;
 
 
 
