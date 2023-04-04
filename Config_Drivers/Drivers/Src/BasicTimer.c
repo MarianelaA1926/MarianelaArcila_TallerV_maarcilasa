@@ -100,15 +100,68 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 	ptrBTimerHandler -> ptrTIMx -> DIER |= TIM_DIER_UIE;
 
+	/* In the seventh step, we activate the NVC to read the interrupt of each counter. */
 
+	if(ptrBTimerHandler -> ptrTIMx ==  TIM2){
+		//For  TIM2
+		NVIC_EnableIRQ(TIM2_IRQn);
+	}
+	else if(ptrBTimerHandler -> ptrTIMx == TIM3){
+		// For TIM3
+		NVIC_EnableIRQ(TIM3_IRQn);
+	}
+	else if(ptrBTimerHandler -> ptrTIMx == TIM4){
+		//For TIM4
+		NVIC_EnableIRQ(TIM4_IRQn);
+	}
+	else if(ptrBTimerHandler -> ptrTIMx == TIM5){
+		//For TIM5
+		NVIC_EnableIRQ(TIM5_IRQn);
+	}
+	else{
+		__NOP();
+	}
 
-
-
-
+	/* In the eighth step we re-enable system interrupts.*/
+	__enable_irq();
 
 }
 
+/* "Finally, we declare the Callback function. This function defines
+ * an action that is executed in response to an interrupt event.
+ * It can perform actions such as updating a variable, activating a peripheral,
+ * or any other action needed to handle the timer interrupt. In this particular
+ * case, this function is used to handle the interrupt for the Basic Timer.
+ *
+ * The attribute ((weak)) indicates that it is a "loosely bound function".
+ * If this function is defined elsewhere in the program, the function in the
+ * current file is modified and replaced with the other definition found in the
+ * program." */
+
+//For TIM2
+__attribute__((weak)) void BasicTimer2_Callback(void){
+
+	__NOP();
+}
 
 
+//For TIM3
+__attribute__((weak)) void BasicTimer3_Callback(void){
 
+	__NOP();
+}
+
+
+//For TIM4
+__attribute__((weak)) void BasicTimer4_Callback(void){
+
+	__NOP();
+}
+
+
+//For TIM5
+__attribute__((weak)) void BasicTimer5_Callback(void){
+
+	__NOP();
+}
 
