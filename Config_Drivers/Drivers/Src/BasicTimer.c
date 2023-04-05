@@ -127,7 +127,7 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 }
 
-/* "Finally, we declare the Callback function. This function defines
+/* In the nineth step, we declare the Callback function. This function defines
  * an action that is executed in response to an interrupt event.
  * It can perform actions such as updating a variable, activating a peripheral,
  * or any other action needed to handle the timer interrupt. In this particular
@@ -164,4 +164,72 @@ __attribute__((weak)) void BasicTimer5_Callback(void){
 
 	__NOP();
 }
+
+
+/* Finally, we need to create another function that knows which functions need
+ * to be executed when the interruption happens. To do this, we create a new function
+ * with the same name used in the interruption vector.
+ *
+ * The interruption vector is a table that contains the memory addresses of interrupt
+ * handling functions. When an interrupt occurs, the microcontroller looks up this table
+ * to get the address of the corresponding interrupt handling function and then jumps to
+ * that memory address to execute the function."*/
+
+
+void TIM2_IRQHandler(void){
+
+	/* We clear the interruption flag of TIM2, which indicates that an interrupt has occurred.
+	 * This is done to prevent an interrupt from being re-triggered immediately after the current
+	 * interrupt has been handled. We use the SR register to access the TIM flag (SR_UIF).*/
+	TIM2 -> SR = & ~TIM_SR_UIF;
+
+	/* We call the callback function which is defined by the user and contains the actions that
+	 * the user has defined for their program*/
+
+	BasicTimer2_Callback();
+}
+
+
+void TIM3_IRQHandler(void){
+
+	/* We clear the interruption flag of TIM3, which indicates that an interrupt has occurred.
+	 * This is done to prevent an interrupt from being re-triggered immediately after the current
+	 * interrupt has been handled. We use the SR register to access the TIM flag (SR_UIF).*/
+	TIM3 -> SR = & ~TIM_SR_UIF;
+
+	/* We call the callback function which is defined by the user and contains the actions that
+	 * the user has defined for their program*/
+
+	BasicTimer3_Callback();
+}
+
+
+void TIM4_IRQHandler(void){
+
+	/* We clear the interruption flag of TIM4, which indicates that an interrupt has occurred.
+	 * This is done to prevent an interrupt from being re-triggered immediately after the current
+	 * interrupt has been handled. We use the SR register to access the TIM flag (SR_UIF).*/
+	TIM4 -> SR = & ~TIM_SR_UIF;
+
+	/* We call the callback function which is defined by the user and contains the actions that
+	 * the user has defined for their program*/
+
+	BasicTimer4_Callback();
+}
+
+
+void TIM5_IRQHandler(void){
+
+	/* We clear the interruption flag of TIM5, which indicates that an interrupt has occurred.
+	 * This is done to prevent an interrupt from being re-triggered immediately after the current
+	 * interrupt has been handled. We use the SR register to access the TIM flag (SR_UIF).*/
+	TIM5 -> SR = & ~TIM_SR_UIF;
+
+	/* We call the callback function which is defined by the user and contains the actions that
+	 * the user has defined for their program*/
+
+	BasicTimer5_Callback();
+}
+
+
 
