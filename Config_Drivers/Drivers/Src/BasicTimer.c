@@ -131,12 +131,14 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 }
 void starTimer (BasicTimer_Handler_t *ptrBTimerHandler){
-	//Activamos al timer para que comience a incrementarse
+
+	//We activate the timer so that it starts to count.
 	ptrBTimerHandler ->ptrTIMx->CR1 |= TIM_CR1_CEN;
 }
 
 void stopTimer(BasicTimer_Handler_t *ptrBTimerHandler){
-	//Desactivamos el timper para que comience a incrementarse
+
+	//We disable the timer so that it stops incrementing.
 	ptrBTimerHandler-> ptrTIMx -> CR1 &= ~(TIM_CR1_CEN);
 }
 

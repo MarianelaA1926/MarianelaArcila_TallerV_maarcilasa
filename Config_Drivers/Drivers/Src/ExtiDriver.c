@@ -20,6 +20,7 @@ void extInt_Config(EXTI_Config_t *extiConfig){
 	/* We configure the PIN as a 'simple input'  to receive the external event.
 	 * To do this, we call the GPIO_Config function from the GPIO Driver." */
 
+
 	GPIO_Config(extiConfig -> pGPIOHandler );
 
 	/* 2.0 We activate the signal clock of the required pheriferal */
@@ -448,7 +449,7 @@ void extInt_Config(EXTI_Config_t *extiConfig){
 			SYSCFG->EXTICR[3] |= (SYSCFG_EXTICR4_EXTI13_PB);
 
 		} else if (extiConfig->pGPIOHandler->pGPIOx == GPIOC) {
-			SYSCFG->EXTICR[3] |= (SYSCFG_EXTICR4_EXTI13_PC);
+			SYSCFG -> EXTICR[3] |= SYSCFG_EXTICR4_EXTI13_PC;
 
 		} else if (extiConfig->pGPIOHandler->pGPIOx == GPIOD) {
 			SYSCFG->EXTICR[3] |= (SYSCFG_EXTICR4_EXTI13_PD);
@@ -545,8 +546,8 @@ void extInt_Config(EXTI_Config_t *extiConfig){
 
 
 		/* Falling Trigger selection register*/
-       EXTI -> FTSR |= SET << (extiConfig->pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber) ;
-       EXTI -> RTSR &= ~SET <<((extiConfig->pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber));
+		EXTI -> FTSR |= SET << (extiConfig->pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber) ;
+		EXTI -> RTSR &= ~SET <<((extiConfig->pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber));
 	}
 
 	else{
@@ -555,13 +556,14 @@ void extInt_Config(EXTI_Config_t *extiConfig){
 
 	}
 
-	/* 5.0 We deactivate global interruptions while we configure the EXTI system */
-	__disable_irq();
+
 
 	/* 6.0 We activate the external interrupt with the IMR register */
 	// Interrupt Mask register
 	EXTI -> IMR |= SET << (extiConfig->pGPIOHandler->GPIO_PinConfig.GPIO_PinNumber);
 
+	/* 5.0 We deactivate global interruptions while we configure the EXTI system */
+	__disable_irq();
 
 	/* 6.1 We enable the interrupt in the NVIC for the corresponding channel,
 	 * where channel 0 corresponds to EXTI_0, channel 1 to EXTI_1, etc.
