@@ -4,7 +4,7 @@
  *  Created on: 22/03/2023
  *      Author: Marianela Arcila Sanchez 			maarcilasa
  * In this program, we define the functions needed to configure
- * the general-purpose timer peripheral "TIMx."
+ * the general-purpose timer peripheral "TIMx.
  *
  */
 
@@ -19,7 +19,7 @@
 
 #define BTIMER_SPEED_10us			160
 #define BTIMER_SPEED_100us			1600
-#define BTIMER_SPEED_1ma			16000
+#define BTIMER_SPEED_1ms			16000
 
 /*This structure contains the definition of the variables that
  * the user has chosen. */
@@ -38,17 +38,20 @@ typedef struct{
 typedef struct{
 
 	TIM_TypeDef 					*ptrTIMx;
-	BasicTimer_Config_t				TIMx_Config;
+	BasicTimer_Config_t 			TIMx_Config;
 
 }BasicTimer_Handler_t;
 
 
 void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler);
-void BasicTimerX_Callback(void); /*This function overwrites the 'main' so the system works.*/
+void BasicTimer2_Callback(void); /*This function overwrites the 'main' so the system works.*/
+void BasicTimer3_Callback(void); /*This function overwrites the 'main' so the system works.*/
+void BasicTimer4_Callback(void); /*This function overwrites the 'main' so the system works.*/
+void BasicTimer5_Callback(void); /*This function overwrites the 'main' so the system works.*/
 
+void starTimer (BasicTimer_Handler_t *ptrBTimerHandler);
 
-
-
+void stopTimer(BasicTimer_Handler_t *ptrBTimerHandler);
 
 
 

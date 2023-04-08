@@ -73,6 +73,7 @@ void GPIOxTooglePin(GPIO_Handler_t *pPinHandler);
 #define GPIO_PUPDR_PULLDOWN		 2
 #define GPIO_PUPDR_RESERVED		 3
 
+
 /* 8.4.5 GPIOx_IDR( One bit for PIN) - This register is used to read the state of the pin. */
 
 /*8.4.6 GPIOx_ODR (un bit por PIN) This register is used to read the state of the pin.(1 o 0).

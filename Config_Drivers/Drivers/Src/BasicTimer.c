@@ -34,19 +34,19 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 	// The second step is to activate the signal clock of the required pheriferal
 	if(ptrBTimerHandler -> ptrTIMx == TIM2){
 		// We write 1 (SET)  in the position corresponds to TIM2
-		RCC -> APB1ENR |= (SET << RCC_APB1ENR_TIM2EN);
+		RCC -> APB1ENR |=  RCC_APB1ENR_TIM2EN;
 	}
 	else if(ptrBTimerHandler -> ptrTIMx == TIM3){
 			// We write 1 (SET)  in the position corresponds to TIM3
-			RCC -> APB1ENR |= (SET << RCC_APB1ENR_TIM3EN);
+			RCC -> APB1ENR |=  RCC_APB1ENR_TIM3EN;
 	}
 	else if(ptrBTimerHandler -> ptrTIMx == TIM4){
 			// We write 1 (SET)  in the position corresponds to TIM4
-			RCC -> APB1ENR |= (SET << RCC_APB1ENR_TIM4EN);
+			RCC -> APB1ENR |=  RCC_APB1ENR_TIM4EN;
 	}
 	else if(ptrBTimerHandler -> ptrTIMx == TIM5){
 			// We write 1 (SET)  in the position corresponds to TIM5
-			RCC -> APB1ENR |= (SET << RCC_APB1ENR_TIM5EN);
+			RCC -> APB1ENR |= RCC_APB1ENR_TIM5EN;
 	}
 	else{
 			__NOP();
@@ -56,7 +56,7 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 	 * to divide the frequency of the clock signal and obtain a timer with a
 	 * frequency that is higher or lower than the original signal, depending
 	 * on the value loaded into the PSC register. */
-	ptrBTimerHandler -> ptrTIMx -> PSC = ptrBTimerHandler ->TIMx_Config.TIMx_speed;
+	ptrBTimerHandler -> ptrTIMx -> PSC = ptrBTimerHandler ->TIMx_Config.TIMx_speed -1;
 
 	/*In the fourth step we choose the direction of the counter (up/down)*/
 	if(ptrBTimerHandler -> TIMx_Config.TIMx_mode == BTIMER_MODE_UP){
@@ -90,15 +90,21 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 	}
 
+
+
+
+
 	/*In the fifth step we configure the CR1-CEN register. With this register,
 	 * we can enable (1) or disable (0) the counter*/
+	//ptrBTimerHandler-> ptrTIMx -> CR1 |= TIM_CR1_CEN;
 
-	ptrBTimerHandler -> ptrTIMx -> CR1 |= TIM_CR1_CEN;
+
 
 	/* The sixth step is to configure the DIER-UIE register. This register
 	 * allows you to modify the state of the interrupt update. (0 disabled, 1 enabled)*/
 
-	ptrBTimerHandler -> ptrTIMx -> DIER |= TIM_DIER_UIE;
+	ptrBTimerHandler-> ptrTIMx -> DIER |= TIM_DIER_UIE;
+
 
 	/* In the seventh step, we activate the NVC to read the interrupt of each counter. */
 
@@ -118,13 +124,20 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 		//For TIM5
 		NVIC_EnableIRQ(TIM5_IRQn);
 	}
-	else{
-		__NOP();
-	}
+
 
 	/* In the eighth step we re-enable system interrupts.*/
 	__enable_irq();
 
+}
+void starTimer (BasicTimer_Handler_t *ptrBTimerHandler){
+	//Activamos al timer para que comience a incrementarse
+	ptrBTimerHandler ->ptrTIMx->CR1 |= TIM_CR1_CEN;
+}
+
+void stopTimer(BasicTimer_Handler_t *ptrBTimerHandler){
+	//Desactivamos el timper para que comience a incrementarse
+	ptrBTimerHandler-> ptrTIMx -> CR1 &= ~(TIM_CR1_CEN);
 }
 
 /* In the nineth step, we declare the Callback function. This function defines
@@ -181,7 +194,7 @@ void TIM2_IRQHandler(void){
 	/* We clear the interruption flag of TIM2, which indicates that an interrupt has occurred.
 	 * This is done to prevent an interrupt from being re-triggered immediately after the current
 	 * interrupt has been handled. We use the SR register to access the TIM flag (SR_UIF).*/
-	TIM2 -> SR = & ~TIM_SR_UIF;
+	ptrTimerUsed-> SR  &= ~TIM_SR_UIF;
 
 	/* We call the callback function which is defined by the user and contains the actions that
 	 * the user has defined for their program*/
@@ -195,7 +208,7 @@ void TIM3_IRQHandler(void){
 	/* We clear the interruption flag of TIM3, which indicates that an interrupt has occurred.
 	 * This is done to prevent an interrupt from being re-triggered immediately after the current
 	 * interrupt has been handled. We use the SR register to access the TIM flag (SR_UIF).*/
-	TIM3 -> SR = & ~TIM_SR_UIF;
+	ptrTimerUsed -> SR &= ~TIM_SR_UIF;
 
 	/* We call the callback function which is defined by the user and contains the actions that
 	 * the user has defined for their program*/
@@ -209,7 +222,7 @@ void TIM4_IRQHandler(void){
 	/* We clear the interruption flag of TIM4, which indicates that an interrupt has occurred.
 	 * This is done to prevent an interrupt from being re-triggered immediately after the current
 	 * interrupt has been handled. We use the SR register to access the TIM flag (SR_UIF).*/
-	TIM4 -> SR = & ~TIM_SR_UIF;
+	ptrTimerUsed-> SR  &= ~TIM_SR_UIF;
 
 	/* We call the callback function which is defined by the user and contains the actions that
 	 * the user has defined for their program*/
@@ -223,7 +236,7 @@ void TIM5_IRQHandler(void){
 	/* We clear the interruption flag of TIM5, which indicates that an interrupt has occurred.
 	 * This is done to prevent an interrupt from being re-triggered immediately after the current
 	 * interrupt has been handled. We use the SR register to access the TIM flag (SR_UIF).*/
-	TIM5 -> SR = & ~TIM_SR_UIF;
+	ptrTimerUsed-> SR &= ~TIM_SR_UIF;
 
 	/* We call the callback function which is defined by the user and contains the actions that
 	 * the user has defined for their program*/
