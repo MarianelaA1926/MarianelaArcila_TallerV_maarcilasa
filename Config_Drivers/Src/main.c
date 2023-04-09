@@ -32,7 +32,7 @@
 GPIO_Handler_t handlerStateLed = {0};
 BasicTimer_Handler_t handlerTimerStateLed = {0};
 GPIO_Handler_t handlerUserButton = {0};
-uint8_t counterExti13;
+
 EXTI_Config_t handlerExtiButton;
 uint8_t buttonPressed;
 
@@ -86,34 +86,35 @@ void initSystem(void){
 	/*Configuracion del Boton como intrrupcion esterna*/
 	//Paso 1 del exti
 	handlerUserButton.pGPIOx	= GPIOC;
-	handlerUserButton.GPIO_PinConfig.GPIO_PinNumber = 13;
+	handlerUserButton.GPIO_PinConfig.GPIO_PinNumber = PIN_13;
 	handlerUserButton.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_IN;
 	handlerUserButton.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	handlerUserButton.GPIO_PinConfig.GPIO_PinAltFunMode		=AF0;
+
+
+
 
 	handlerExtiButton.pGPIOHandler= &handlerUserButton;
 	handlerExtiButton.edgeType = EXTERNAL_INTERRUPT_FALLING_EDGE;
 	extInt_Config(&handlerExtiButton);
 
 }
-
-void callback_extInt13(void){
-	buttonPressed = GPIO_ReadPin(&handlerUserButton);
-	if(buttonPressed == SET){
-
-		GPIO_WritePin(&handlerStateLed, RESET);
-	}
-	else{
-		GPIO_WritePin(&handlerStateLed, SET);
-	}
-
-}
 // Funcion de interrupcion del TIMER2
 void BasicTimer2_Callback(void){
 
-
-	//Blinky led
-
-	//GPIOxTooglePin(&handlerStateLed);
-	GPIO_WritePin(&handlerStateLed, RESET);
+	buttonPressed = GPIO_ReadPin(&handlerUserButton);
+	if(buttonPressed == SET){
+	        // Si el botón está presionado, apagar el LED
+			GPIOxTooglePin(&handlerStateLed);
+	    }
+	    else {
+	        // Si el botón está suelto, encender el LED
+	        GPIO_WritePin(&handlerStateLed, SET);
+	 }
 }
+
+void callback_extInt13(void){
+
+}
+
+
