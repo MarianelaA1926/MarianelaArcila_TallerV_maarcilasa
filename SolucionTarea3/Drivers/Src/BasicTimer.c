@@ -58,16 +58,17 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 	 * on the value loaded into the PSC register. */
 	ptrBTimerHandler -> ptrTIMx -> PSC = ptrBTimerHandler ->TIMx_Config.TIMx_speed -1;
 
+	/* For a timer in count up mode, we need to define the ARR (Auto-Reload Register).
+	 * This sets the maximum value for the counter, and when the counter reaches this
+	 * maximum value, it automatically restarts to 0.*/
+	ptrBTimerHandler -> ptrTIMx -> ARR = ptrBTimerHandler -> TIMx_Config.TIMx_period -1;
+
 	/*In the fourth step we choose the direction of the counter (up/down)*/
 	if(ptrBTimerHandler -> TIMx_Config.TIMx_mode == BTIMER_MODE_UP){
 
 		/*First we configure the counter to count up whit the CR1-DIR register*/
 		ptrBTimerHandler -> ptrTIMx -> CR1 &= ~TIM_CR1_DIR;
 
-		/* For a timer in count up mode, we need to define the ARR (Auto-Reload Register).
-		 * This sets the maximum value for the counter, and when the counter reaches this
-		 * maximum value, it automatically restarts to 0.*/
-		ptrBTimerHandler -> ptrTIMx -> ARR = ptrBTimerHandler -> TIMx_Config.TIMx_period -1;
 
 		/* To restart the counter, we need to configure the CNT (Counter) register. The CNT
 		 * register is used to count the number of pulses of the clock signal, and when we
@@ -80,23 +81,29 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 		/*We configure the Down Mode whit the CR1-DIR register in 1*/
 		ptrBTimerHandler -> ptrTIMx -> CR1 |= TIM_CR1_DIR;
 
-		/* Since the counter is in descending mode, we need to set the
-		 * counter cap using the ARR (Auto-Reload Register) register.*/
-		ptrBTimerHandler -> ptrTIMx -> ARR = 0;
-
 
 		/* we restart the maximun value whit the CNT register */
-		ptrBTimerHandler -> ptrTIMx -> CNT = ptrBTimerHandler -> TIMx_Config.TIMx_period -1;
+		ptrBTimerHandler->ptrTIMx->CNT = ptrBTimerHandler->TIMx_Config.TIMx_period - 1;
 
 	}
 
 
 
 
-
 	/*In the fifth step we configure the CR1-CEN register. With this register,
 	 * we can enable (1) or disable (0) the counter*/
-	//ptrBTimerHandler-> ptrTIMx -> CR1 |= TIM_CR1_CEN;
+
+	if(ptrBTimerHandler->TIMx_Config.TIMx_interrupEnable !=  BTIMER_DISABLE){
+
+			ptrBTimerHandler-> ptrTIMx -> CR1 |= TIM_CR1_CEN;
+			ptrBTimerHandler-> ptrTIMx -> DIER |= TIM_DIER_UIE;
+
+		}
+		else{
+			ptrBTimerHandler-> ptrTIMx -> CR1 &= ~TIM_CR1_CEN;
+			ptrBTimerHandler-> ptrTIMx -> DIER &= ~TIM_DIER_UIE;
+		}
+
 
 
 

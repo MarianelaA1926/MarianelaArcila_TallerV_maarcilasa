@@ -21,6 +21,10 @@
 #define BTIMER_SPEED_100us			1600
 #define BTIMER_SPEED_1ms			16000
 
+
+#define BTIMER_DISABLE  0
+#define BTIMER_ENABLE   1
+
 /*This structure contains the definition of the variables that
  * the user has chosen. */
 

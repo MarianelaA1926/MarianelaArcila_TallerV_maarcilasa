@@ -115,6 +115,25 @@ void BasicTimer2_Callback(void){
 
 void callback_extInt13(void){
 
+	uint8_t currDataState;
+	currDataState = GPIO_ReadPin(&handlerEncoderDT);
+
+	if(currDataState != prevDataState){
+		//se determina la direccion de giro del encoder
+		if(currDataState == SET){
+			//Giro en direccion horaria
+			GPIO_WritePin(&handlerExternalLed, RESET);
+
+		}
+		else{
+			//Giro direccion antihoraria
+			GPIO_WritePin(&handlerExternalLed, SET);
+		}
+
+		prevDataState = currDataState;
+	}
+
+
 }
 
 
