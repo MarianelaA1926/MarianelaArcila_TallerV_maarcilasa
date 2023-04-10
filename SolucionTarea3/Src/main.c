@@ -67,7 +67,7 @@ GPIO_Handler_t  handlerTransitor1 = {0};
 GPIO_Handler_t  handlerTransitor2 = {0};
 
 
-
+BasicTimer_Handler_t handlerTimerSG = {0};
 
 
 // Variables globales para almacenar el valor actual y el máximo permitido
@@ -75,6 +75,8 @@ uint8_t count = 0;
 uint8_t decenas;
 uint8_t unidades;
 int activo = 1;
+
+
 
 /* Principal Functions */
 void initSystem(void);
@@ -87,7 +89,11 @@ void Delay(uint32_t value);
 int main(void)
 {
 	initSystem();
+	while(1){
 
+
+	}
+	return 0;
 }
 
 /* Pin configuration function  */
@@ -178,7 +184,17 @@ void initSystem(void){
 
 
 //-------------------------------------------------LED 7 SEGMENTOS----------------------------------------------------------
-
+//TIMER
+	// We configure TIMER 2 as the counter for the stateLed
+	handlerTimerSG.ptrTIMx = 										TIM3;
+	handlerTimerSG.TIMx_Config.TIMx_mode = 						BTIMER_MODE_UP;
+	handlerTimerSG.TIMx_Config.TIMx_speed= 						BTIMER_SPEED_1ms;
+	handlerTimerSG.TIMx_Config.TIMx_period = 						10;
+	handlerTimerSG.TIMx_Config.TIMx_interrupEnable=				BTIMER_DISABLE;
+	// We load the configuration
+	BasicTimer_Config(&handlerTimerSG);
+	// We activate the TIM2
+	starTimer(&handlerTimerSG);
 //------LEDS-------------------------------
 	handlerPunto.pGPIOx = 												GPIOB; 									//El puerto que se esta utilizando es el puerto B
     handlerPunto.GPIO_PinConfig.GPIO_PinNumber =						PIN_9; //EL pin que se esta utilizando es el pin 8
@@ -271,11 +287,11 @@ void initSystem(void){
 	* este se conectara al pin 9 del puerto b
 	*
 	*/
-	handlerTransitor1.pGPIOx = 											GPIOB; 	//El puerto que se esta utilizando es el puerto B
-	handlerTransitor1.GPIO_PinConfig.GPIO_PinNumber = 					PIN_5; //EL pin que se esta utilizando es el pin 9
+	handlerTransitor1.pGPIOx = 											GPIOC; 	//El puerto que se esta utilizando es el puerto B
+	handlerTransitor1.GPIO_PinConfig.GPIO_PinNumber = 					PIN_1; //EL pin que se esta utilizando es el pin 9
 	handlerTransitor1.GPIO_PinConfig.GPIO_PinMode=						GPIO_MODE_OUT; //EL pin esta en modo de salida
 	handlerTransitor1.GPIO_PinConfig.GPIO_PinOPType= 					GPIO_OTYPE_PUSHPULL; //PushPull para poder que me de cero y uno
-	handlerTransitor1.GPIO_PinConfig.GPIO_PinPuPdControl=				GPIO_PUPDR_PULLUP; // YA tiene res. No necesita de otra, por lo cual se pone NOTHING
+	handlerTransitor1.GPIO_PinConfig.GPIO_PinPuPdControl=				GPIO_PUPDR_NOTHING; // YA tiene res. No necesita de otra, por lo cual se pone NOTHING
 	handlerTransitor1.GPIO_PinConfig.GPIO_PinSpeed=						GPIO_OSPEED_FAST; //Configuro la velocidad
 
 
@@ -287,10 +303,10 @@ void initSystem(void){
 	*
 	*/
 	handlerTransitor2.pGPIOx = 											GPIOB; //El puerto que se esta utilizando es el puerto B
-	handlerTransitor2.GPIO_PinConfig.GPIO_PinNumber=          			PIN_3; //EL pin que se esta utilizando es el pin 9
+	handlerTransitor2.GPIO_PinConfig.GPIO_PinNumber=          			PIN_4; //EL pin que se esta utilizando es el pin 9
 	handlerTransitor2.GPIO_PinConfig.GPIO_PinMode=            			GPIO_MODE_OUT; //EL pin esta en modo de salida
 	handlerTransitor2.GPIO_PinConfig.GPIO_PinOPType=          			GPIO_OTYPE_PUSHPULL; //PushPull para poder que me de cero y uno
-	handlerTransitor2.GPIO_PinConfig.GPIO_PinPuPdControl=     			GPIO_PUPDR_PULLUP; // YA tiene res. No necesita de otra, por lo cual se pone NOTHING
+	handlerTransitor2.GPIO_PinConfig.GPIO_PinPuPdControl=     			GPIO_PUPDR_NOTHING; // YA tiene res. No necesita de otra, por lo cual se pone NOTHING
 	handlerTransitor2.GPIO_PinConfig.GPIO_PinSpeed=           			GPIO_OSPEED_FAST; //Configuro la velocidad
 
 
@@ -324,8 +340,9 @@ void callback_extInt4(void){
 }
 
 
-void callback_extInt0(void){
 
+
+void callback_extInt0(void){
 
 
 	uint8_t prevDataState = 0;
@@ -359,6 +376,7 @@ void callback_extInt0(void){
 	if (count < 10) {
 
 
+
 		    unidades = count;
 		    numeros(unidades);
 		    GPIO_WritePin(&handlerPunto, SET);
@@ -368,7 +386,9 @@ void callback_extInt0(void){
 
 
 
+
 	 else {
+		 numeros(0);
 	    // Si el contador es mayor o igual a 10, se escriben ambos dígitos
 
 
@@ -377,26 +397,20 @@ void callback_extInt0(void){
 	    numeros(decenas);
 	    GPIO_WritePin(&handlerPunto, RESET);
 	    Delay(20);
+		unidades = count;
 	    numeros(unidades);
 	    GPIO_WritePin(&handlerPunto, SET);
 	    Delay(20);
 	}
+
 	prevDataState = currDataState;
-
 }
 
 
-//Callback function with state led
-
-void BasicTimer2_Callback(void){
-
-	/* To create a status LED, we need to link the timer with the GPIO.
-	 * We can do this by calling the Toggle function in the Timer Callback.
-	 * This generates the interrupt that will toggle the LED state.*/
-	GPIOxTooglePin(&handlerStateLed);
-
+void BasicTimer3_Callback(void){
 
 }
+
 
 
 
@@ -412,6 +426,25 @@ void callback_extInt8(void){
 }
 
 
+
+//Callback function with state led
+
+void BasicTimer2_Callback(void){
+
+	/* To create a status LED, we need to link the timer with the GPIO.
+	 * We can do this by calling the Toggle function in the Timer Callback.
+	 * This generates the interrupt that will toggle the LED state.*/
+	GPIOxTooglePin(&handlerStateLed);
+
+
+
+}
+
+
+//funcion para que el sistema espere un tiempo prudente antes de marcar el otro numero
+void Delay(uint32_t value){
+  for(uint32_t i=0; i<value; i++);
+}
 
 
 //Funcion que contiene todos los numeros
@@ -559,7 +592,3 @@ switch (numero) {
 	}
 
 
-//funcion para que el sistema espere un tiempo prudente antes de marcar el otro numero
-void Delay(uint32_t value){
-  for(uint32_t i=0; i<value; i++);
-}

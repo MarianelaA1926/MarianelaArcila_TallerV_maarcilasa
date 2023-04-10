@@ -56,12 +56,10 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 	 * to divide the frequency of the clock signal and obtain a timer with a
 	 * frequency that is higher or lower than the original signal, depending
 	 * on the value loaded into the PSC register. */
-	ptrBTimerHandler -> ptrTIMx -> PSC = ptrBTimerHandler ->TIMx_Config.TIMx_speed -1;
+	ptrBTimerHandler -> ptrTIMx ->PSC = ptrBTimerHandler ->TIMx_Config.TIMx_speed -1;
 
-	/* For a timer in count up mode, we need to define the ARR (Auto-Reload Register).
-	 * This sets the maximum value for the counter, and when the counter reaches this
-	 * maximum value, it automatically restarts to 0.*/
-	ptrBTimerHandler -> ptrTIMx -> ARR = ptrBTimerHandler -> TIMx_Config.TIMx_period -1;
+
+
 
 	/*In the fourth step we choose the direction of the counter (up/down)*/
 	if(ptrBTimerHandler -> TIMx_Config.TIMx_mode == BTIMER_MODE_UP){
@@ -69,6 +67,10 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 		/*First we configure the counter to count up whit the CR1-DIR register*/
 		ptrBTimerHandler -> ptrTIMx -> CR1 &= ~TIM_CR1_DIR;
 
+		/* For a timer in count up mode, we need to define the ARR (Auto-Reload Register).
+		 * This sets the maximum value for the counter, and when the counter reaches this
+		 * maximum value, it automatically restarts to 0.*/
+		ptrBTimerHandler -> ptrTIMx -> ARR = ptrBTimerHandler -> TIMx_Config.TIMx_period -1;
 
 		/* To restart the counter, we need to configure the CNT (Counter) register. The CNT
 		 * register is used to count the number of pulses of the clock signal, and when we
@@ -81,6 +83,10 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 		/*We configure the Down Mode whit the CR1-DIR register in 1*/
 		ptrBTimerHandler -> ptrTIMx -> CR1 |= TIM_CR1_DIR;
 
+		/* For a timer in count up mode, we need to define the ARR (Auto-Reload Register).
+		 * This sets the maximum value for the counter, and when the counter reaches this
+		 * maximum value, it automatically restarts to 0.*/
+		ptrBTimerHandler -> ptrTIMx -> ARR = ptrBTimerHandler -> TIMx_Config.TIMx_period -1;
 
 		/* we restart the maximun value whit the CNT register */
 		ptrBTimerHandler->ptrTIMx->CNT = ptrBTimerHandler->TIMx_Config.TIMx_period - 1;
@@ -92,25 +98,14 @@ void BasicTimer_Config(BasicTimer_Handler_t *ptrBTimerHandler){
 
 	/*In the fifth step we configure the CR1-CEN register. With this register,
 	 * we can enable (1) or disable (0) the counter*/
-
-	if(ptrBTimerHandler->TIMx_Config.TIMx_interrupEnable !=  BTIMER_DISABLE){
-
-			ptrBTimerHandler-> ptrTIMx -> CR1 |= TIM_CR1_CEN;
-			ptrBTimerHandler-> ptrTIMx -> DIER |= TIM_DIER_UIE;
-
-		}
-		else{
-			ptrBTimerHandler-> ptrTIMx -> CR1 &= ~TIM_CR1_CEN;
-			ptrBTimerHandler-> ptrTIMx -> DIER &= ~TIM_DIER_UIE;
-		}
-
+	//ptrBTimerHandler->ptrTIMx->CR1 |= TIM_CR1_CEN;
 
 
 
 	/* The sixth step is to configure the DIER-UIE register. This register
 	 * allows you to modify the state of the interrupt update. (0 disabled, 1 enabled)*/
 
-	ptrBTimerHandler-> ptrTIMx -> DIER |= TIM_DIER_UIE;
+	ptrBTimerHandler ->ptrTIMx -> DIER |= TIM_DIER_UIE;
 
 
 	/* In the seventh step, we activate the NVC to read the interrupt of each counter. */
@@ -163,8 +158,7 @@ void stopTimer(BasicTimer_Handler_t *ptrBTimerHandler){
 
 //For TIM2
 __attribute__((weak)) void BasicTimer2_Callback(void){
-
-	__NOP();
+	 __NOP();
 }
 
 
@@ -174,18 +168,15 @@ __attribute__((weak)) void BasicTimer3_Callback(void){
 	__NOP();
 }
 
-
 //For TIM4
 __attribute__((weak)) void BasicTimer4_Callback(void){
-
-	__NOP();
+	 	__NOP();
 }
 
 
 //For TIM5
 __attribute__((weak)) void BasicTimer5_Callback(void){
-
-	__NOP();
+	  	__NOP();
 }
 
 
@@ -204,7 +195,7 @@ void TIM2_IRQHandler(void){
 	/* We clear the interruption flag of TIM2, which indicates that an interrupt has occurred.
 	 * This is done to prevent an interrupt from being re-triggered immediately after the current
 	 * interrupt has been handled. We use the SR register to access the TIM flag (SR_UIF).*/
-	ptrTimerUsed-> SR  &= ~TIM_SR_UIF;
+	TIM2->SR &= ~TIM_SR_UIF;
 
 	/* We call the callback function which is defined by the user and contains the actions that
 	 * the user has defined for their program*/
@@ -218,7 +209,7 @@ void TIM3_IRQHandler(void){
 	/* We clear the interruption flag of TIM3, which indicates that an interrupt has occurred.
 	 * This is done to prevent an interrupt from being re-triggered immediately after the current
 	 * interrupt has been handled. We use the SR register to access the TIM flag (SR_UIF).*/
-	ptrTimerUsed -> SR &= ~TIM_SR_UIF;
+	TIM3->SR &= ~TIM_SR_UIF;
 
 	/* We call the callback function which is defined by the user and contains the actions that
 	 * the user has defined for their program*/
@@ -232,7 +223,7 @@ void TIM4_IRQHandler(void){
 	/* We clear the interruption flag of TIM4, which indicates that an interrupt has occurred.
 	 * This is done to prevent an interrupt from being re-triggered immediately after the current
 	 * interrupt has been handled. We use the SR register to access the TIM flag (SR_UIF).*/
-	ptrTimerUsed-> SR  &= ~TIM_SR_UIF;
+	TIM4->SR &= ~TIM_SR_UIF;
 
 	/* We call the callback function which is defined by the user and contains the actions that
 	 * the user has defined for their program*/
@@ -246,7 +237,7 @@ void TIM5_IRQHandler(void){
 	/* We clear the interruption flag of TIM5, which indicates that an interrupt has occurred.
 	 * This is done to prevent an interrupt from being re-triggered immediately after the current
 	 * interrupt has been handled. We use the SR register to access the TIM flag (SR_UIF).*/
-	ptrTimerUsed-> SR &= ~TIM_SR_UIF;
+	TIM5->SR &= ~TIM_SR_UIF;
 
 	/* We call the callback function which is defined by the user and contains the actions that
 	 * the user has defined for their program*/
