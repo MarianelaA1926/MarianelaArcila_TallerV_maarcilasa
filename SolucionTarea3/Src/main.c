@@ -44,21 +44,35 @@ uint8_t buttonPressed;
 
 GPIO_Handler_t handlerEncoderClock = {0};
 EXTI_Config_t handlerExtiEncoderCK = {0};
-uint8_t lastClkState;
+uint8_t prevDataState = 0;
 
 
 GPIO_Handler_t handlerEncoderDT = {0};
-uint8_t lastDTState;
+uint8_t prevDTState = 0;
+uint8_t prevCLKState = 0;
 
 
 GPIO_Handler_t handlerEncoderSW = {0};
 EXTI_Config_t handlerExtiEncoderSW = {0};
 
 
+//-------------------------------------------------7Segmentos------------------------------------------------------------
+
+GPIO_Handler_t  handlerPunto   = {0};
+GPIO_Handler_t  handlerPinLedA = {0};
+GPIO_Handler_t  handlerPinLedB = {0};
+GPIO_Handler_t  handlerPinLedC = {0};
+GPIO_Handler_t  handlerPinLedD = {0};
+GPIO_Handler_t  handlerPinLedE = {0};
+GPIO_Handler_t  handlerPinLedF = {0};
+GPIO_Handler_t  handlerPinLedG = {0};
+
+
 /* Principal Functions */
 void initSystem(void);
+
 void BasicTimer2_Callback(void);
-void BasicTimer3_Callback(void);
+
 
 int main(void)
 {
@@ -67,10 +81,6 @@ int main(void)
 
     /* Principal cicle  */
 	while(1){
-
-
-
-
 
 	}
 	return 0;
@@ -86,7 +96,7 @@ void initSystem(void){
 	handlerStateLed.GPIO_PinConfig.GPIO_PinNumber = 					PIN_5;
 	handlerStateLed.GPIO_PinConfig.GPIO_PinMode = 						GPIO_MODE_OUT;
 	handlerStateLed.GPIO_PinConfig.GPIO_PinOPType = 					GPIO_OTYPE_PUSHPULL;
-	handlerStateLed.GPIO_PinConfig.GPIO_PinPuPdControl = 				GPIO_PUPDR_PULLDOWN;
+	handlerStateLed.GPIO_PinConfig.GPIO_PinPuPdControl = 				GPIO_PUPDR_NOTHING;
 	handlerStateLed.GPIO_PinConfig.GPIO_PinSpeed = 						GPIO_OSPEED_FAST;
 
 
@@ -112,7 +122,7 @@ void initSystem(void){
 	handlerExternalLed.GPIO_PinConfig.GPIO_PinNumber = 					PIN_8;
 	handlerExternalLed.GPIO_PinConfig.GPIO_PinMode = 					GPIO_MODE_OUT;
 	handlerExternalLed.GPIO_PinConfig.GPIO_PinOPType = 					GPIO_OTYPE_PUSHPULL;
-	handlerExternalLed.GPIO_PinConfig.GPIO_PinPuPdControl = 				GPIO_PUPDR_PULLDOWN;
+	handlerExternalLed.GPIO_PinConfig.GPIO_PinPuPdControl = 			GPIO_PUPDR_PULLUP;
 	handlerExternalLed.GPIO_PinConfig.GPIO_PinSpeed = 					GPIO_OSPEED_FAST;
 
 
@@ -148,7 +158,7 @@ void initSystem(void){
 
 	//ExtiConfiguration
 	handlerExtiEncoderCK.pGPIOHandler= 									&handlerEncoderClock;
-	handlerExtiEncoderCK.edgeType = 										EXTERNAL_INTERRUPT_FALLING_EDGE;
+	handlerExtiEncoderCK.edgeType = 										EXTERNAL_INTERRUPT_RISING_EDGE;
 	extInt_Config(&handlerExtiEncoderCK);
 
 
@@ -166,64 +176,129 @@ void initSystem(void){
 	/*ENCODER SW configuration as external interruption*/
 	//GPIO configuration
 	handlerEncoderSW.pGPIOx	= 										GPIOA;
-	handlerEncoderSW.GPIO_PinConfig.GPIO_PinNumber = 				PIN_2;
+	handlerEncoderSW.GPIO_PinConfig.GPIO_PinNumber = 				PIN_10;
 	handlerEncoderSW.GPIO_PinConfig.GPIO_PinMode = 					GPIO_MODE_IN;
 	handlerEncoderSW.GPIO_PinConfig.GPIO_PinPuPdControl = 			GPIO_PUPDR_PULLUP;
 
 
-	//ExtiConfiguration
-	handlerExtiEncoderSW.pGPIOHandler= 									&handlerEncoderSW;
-	handlerExtiEncoderSW.edgeType = 										EXTERNAL_INTERRUPT_FALLING_EDGE;
-	extInt_Config(&handlerExtiEncoderSW);
+//-------------------------------------------------LED 7 SEGMENTOS----------------------------------------------------------
+
+//------LEDS-------------------------------
+	handlerPunto.pGPIOx = 												GPIOB; 									//El puerto que se esta utilizando es el puerto B
+    handlerPunto.GPIO_PinConfig.GPIO_PinNumber =						PIN_5; //EL pin que se esta utilizando es el pin 8
+    handlerPunto.GPIO_PinConfig.GPIO_PinMode  =							GPIO_MODE_OUT; //EL pin esta en modo de salida
+    handlerPunto.GPIO_PinConfig.GPIO_PinOPType =         				GPIO_OTYPE_PUSHPULL; //PushPull para poder que me de cero y uno
+    handlerPunto.GPIO_PinConfig.GPIO_PinPuPdControl =					GPIO_PUPDR_NOTHING; // YA tiene res. No necesita de otra, por lo cual se pone NOTHING
+    handlerPunto.GPIO_PinConfig.GPIO_PinSpeed=				            GPIO_OSPEED_MEDIUM; //Configuro la velocida
+
+    //Ahora se carga la configuración
+    GPIO_Config(&handlerPunto);
+
+	handlerPinLedA.pGPIOx=                                  			GPIOC;
+	handlerPinLedA.GPIO_PinConfig.GPIO_PinNumber=           			PIN_0;// pin para led externo;
+	handlerPinLedA.GPIO_PinConfig.GPIO_PinMode=             			GPIO_MODE_OUT;
+	handlerPinLedA.GPIO_PinConfig.GPIO_PinOPType=          				GPIO_OTYPE_PUSHPULL;
+	handlerPinLedA.GPIO_PinConfig.GPIO_PinPuPdControl=    				GPIO_PUPDR_NOTHING;
+	handlerPinLedA.GPIO_PinConfig.GPIO_PinSpeed=            			GPIO_OSPEED_MEDIUM;
+
+
+	GPIO_Config(&handlerPinLedA);
+
+
+	handlerPinLedB.pGPIOx=                                   			GPIOA;
+	handlerPinLedB.GPIO_PinConfig.GPIO_PinNumber=            			PIN_1;// pin para led externo;
+	handlerPinLedB.GPIO_PinConfig.GPIO_PinMode=              			GPIO_MODE_OUT;
+	handlerPinLedB.GPIO_PinConfig.GPIO_PinOPType=            			GPIO_OTYPE_PUSHPULL;
+	handlerPinLedB.GPIO_PinConfig.GPIO_PinPuPdControl=      			GPIO_PUPDR_NOTHING;
+	handlerPinLedB.GPIO_PinConfig.GPIO_PinSpeed=             			GPIO_OSPEED_MEDIUM;
+
+	GPIO_Config(&handlerPinLedB);
+
+	handlerPinLedC.pGPIOx=                                   			GPIOA;
+	handlerPinLedC.GPIO_PinConfig.GPIO_PinNumber=            			PIN_4;// pin para led externo;
+	handlerPinLedC.GPIO_PinConfig.GPIO_PinMode=              			GPIO_MODE_OUT;
+	handlerPinLedC.GPIO_PinConfig.GPIO_PinOPType=            			GPIO_OTYPE_PUSHPULL;
+	handlerPinLedC.GPIO_PinConfig.GPIO_PinPuPdControl=       			GPIO_PUPDR_NOTHING;
+	handlerPinLedC.GPIO_PinConfig.GPIO_PinSpeed=             			GPIO_OSPEED_MEDIUM;
+
+
+	GPIO_Config(&handlerPinLedC);
+
+	handlerPinLedD.pGPIOx=                                   			GPIOA;
+	handlerPinLedD.GPIO_PinConfig.GPIO_PinNumber=            			PIN_6;// pin para led externo;
+	handlerPinLedD.GPIO_PinConfig.GPIO_PinMode=              			GPIO_MODE_OUT;
+	handlerPinLedD.GPIO_PinConfig.GPIO_PinOPType=            			GPIO_OTYPE_PUSHPULL;
+	handlerPinLedD.GPIO_PinConfig.GPIO_PinPuPdControl=       			GPIO_PUPDR_NOTHING;
+	handlerPinLedD.GPIO_PinConfig.GPIO_PinSpeed=             			GPIO_OSPEED_MEDIUM;
+
+
+	GPIO_Config(&handlerPinLedD);
+
+	handlerPinLedE.pGPIOx=                                   			GPIOA;
+	handlerPinLedE.GPIO_PinConfig.GPIO_PinNumber=            			PIN_7;// pin para led externo;
+	handlerPinLedE.GPIO_PinConfig.GPIO_PinMode=              			GPIO_MODE_OUT;
+	handlerPinLedE.GPIO_PinConfig.GPIO_PinOPType=            			GPIO_OTYPE_PUSHPULL;
+	handlerPinLedE.GPIO_PinConfig.GPIO_PinPuPdControl=       			GPIO_PUPDR_NOTHING;
+	handlerPinLedE.GPIO_PinConfig.GPIO_PinSpeed=             			GPIO_OSPEED_MEDIUM;
+
+
+	GPIO_Config(&handlerPinLedE);
+
+	handlerPinLedF.pGPIOx=                                   			GPIOA;
+	handlerPinLedF.GPIO_PinConfig.GPIO_PinNumber=            			PIN_8;// pin para led externo;
+	handlerPinLedF.GPIO_PinConfig.GPIO_PinMode=              			GPIO_MODE_OUT;
+	handlerPinLedF.GPIO_PinConfig.GPIO_PinOPType=            			GPIO_OTYPE_PUSHPULL;
+	handlerPinLedF.GPIO_PinConfig.GPIO_PinPuPdControl=       			GPIO_PUPDR_NOTHING;
+	handlerPinLedF.GPIO_PinConfig.GPIO_PinSpeed=             			GPIO_OSPEED_MEDIUM;
+
+
+	GPIO_Config(&handlerPinLedF);
+
+	handlerPinLedG.pGPIOx=                                  				GPIOA;
+	handlerPinLedG.GPIO_PinConfig.GPIO_PinNumber=            			PIN_9;// pin para led externo;
+	handlerPinLedG.GPIO_PinConfig.GPIO_PinMode=              			GPIO_MODE_OUT;
+	handlerPinLedG.GPIO_PinConfig.GPIO_PinOPType=            			GPIO_OTYPE_PUSHPULL;
+	handlerPinLedG.GPIO_PinConfig.GPIO_PinPuPdControl=       			GPIO_PUPDR_NOTHING;
+	handlerPinLedG.GPIO_PinConfig.GPIO_PinSpeed=             			GPIO_OSPEED_MEDIUM;
+
+
+	GPIO_Config(&handlerPinLedG);
+
+//----------------------Transistores
+
+
 
 
 }
 
 
 
+//
 
 
 
 
 
-/*
-//Callback function with Exti
-void callback_extInt6(void){
 
-
-}
-*/
-//Callback function with Exti
 void callback_extInt0(void){
 
-//Se lee el estado del clok para determina si su funcionamiento es correcto
-	uint8_t clkState;
-	clkState = GPIO_ReadPin(&handlerEncoderClock);
+	uint8_t currDataState;
+	currDataState = GPIO_ReadPin(&handlerEncoderDT);
 
-	//Se detecta si hay un flanco de subida o de bajada
-	if ( clkState != lastClkState){
-		lastClkState = clkState;
-
-		//Se lee el estado actual del pin DT con el fin de determinar como gira el encoder
-		lastDTState = GPIO_ReadPin(&handlerEncoderDT);
-
-		if(lastDTState == clkState){
-			//Giro en sentido horario se enciende el Led externo
-			GPIO_WritePin(&handlerExternalLed, SET);
-		}
-		else{
-			//Giro en sentido antiohorario se apaga el led
+	if(currDataState != prevDataState){
+		//se determina la direccion de giro del encoder
+		if(currDataState == SET){
+			//Giro en direccion horaria
 			GPIO_WritePin(&handlerExternalLed, RESET);
 
 		}
+		else{
+			//Giro direccion antihoraria
+			GPIO_WritePin(&handlerExternalLed, SET);
+		}
 
-
-
+		prevDataState = currDataState;
 	}
-}
-
-//Callback function with Exti
-void callback_extInt2(void){
 
 
 }
@@ -247,11 +322,13 @@ void BasicTimer2_Callback(void){
     	GPIO_WritePin(&handlerExternalLed, SET); // Encendemos el LED asociado
     }
 
-
-
-
-
-
-
 }
+
+
+//Callback function with Exti
+void callback_extInt6(void){
+}
+
+//Callback function with Exti
+
 
