@@ -184,17 +184,7 @@ void initSystem(void){
 
 
 //-------------------------------------------------LED 7 SEGMENTOS----------------------------------------------------------
-//TIMER
-	// We configure TIMER 2 as the counter for the stateLed
-	handlerTimerSG.ptrTIMx = 										TIM3;
-	handlerTimerSG.TIMx_Config.TIMx_mode = 						BTIMER_MODE_UP;
-	handlerTimerSG.TIMx_Config.TIMx_speed= 						BTIMER_SPEED_1ms;
-	handlerTimerSG.TIMx_Config.TIMx_period = 						10;
-	handlerTimerSG.TIMx_Config.TIMx_interrupEnable=				BTIMER_DISABLE;
-	// We load the configuration
-	BasicTimer_Config(&handlerTimerSG);
-	// We activate the TIM2
-	starTimer(&handlerTimerSG);
+
 //------LEDS-------------------------------
 	handlerPunto.pGPIOx = 												GPIOB; 									//El puerto que se esta utilizando es el puerto B
     handlerPunto.GPIO_PinConfig.GPIO_PinNumber =						PIN_9; //EL pin que se esta utilizando es el pin 8
@@ -312,14 +302,21 @@ void initSystem(void){
 
 	//Ahora se carga la configuración
 	GPIO_Config(&handlerTransitor2);
+	GPIOxTooglePin(&handlerTransitor2);
 
-
+//TIMER
+	// We configure TIMER 3 as the counter for the stateLed
+	handlerTimerSG.ptrTIMx = 										TIM3;
+	handlerTimerSG.TIMx_Config.TIMx_mode = 						BTIMER_MODE_UP;
+	handlerTimerSG.TIMx_Config.TIMx_speed= 						BTIMER_SPEED_1ms;
+	handlerTimerSG.TIMx_Config.TIMx_period = 						10;
+	handlerTimerSG.TIMx_Config.TIMx_interrupEnable=				BTIMER_DISABLE;
+	// We load the configuration
+	BasicTimer_Config(&handlerTimerSG);
+	// We activate the TIM3
+	starTimer(&handlerTimerSG);
 
 }
-
-
-
-//
 
 
 
@@ -378,9 +375,9 @@ void callback_extInt0(void){
 
 
 		    unidades = count;
-		    numeros(unidades);
-		    GPIO_WritePin(&handlerPunto, SET);
-		    Delay(20);
+		    decenas = RESET;
+
+
 	}
 
 
@@ -394,13 +391,8 @@ void callback_extInt0(void){
 
 	    decenas = count / 10;
 	    unidades = count % 10;
-	    numeros(decenas);
-	    GPIO_WritePin(&handlerPunto, RESET);
-	    Delay(20);
-		unidades = count;
-	    numeros(unidades);
-	    GPIO_WritePin(&handlerPunto, SET);
-	    Delay(20);
+
+
 	}
 
 	prevDataState = currDataState;
@@ -408,6 +400,19 @@ void callback_extInt0(void){
 
 
 void BasicTimer3_Callback(void){
+
+	uint8_t transistor1;
+	transistor1 = GPIO_ReadPin(&handlerTransitor1);
+
+	if (transistor1 == SET){
+		numeros(unidades);
+
+	}
+	else{
+		numeros(decenas);
+	}
+GPIOxTooglePin(&handlerTransitor1);
+GPIOxTooglePin(&handlerTransitor2);
 
 }
 
@@ -445,6 +450,7 @@ void BasicTimer2_Callback(void){
 void Delay(uint32_t value){
   for(uint32_t i=0; i<value; i++);
 }
+
 
 
 //Funcion que contiene todos los numeros
