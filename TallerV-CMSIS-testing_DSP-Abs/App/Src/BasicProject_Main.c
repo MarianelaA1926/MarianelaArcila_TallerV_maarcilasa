@@ -23,8 +23,12 @@
 #include "ExtiDriver.h"
 
 
+
 int main(void)
+
 {
+	/* Activamos el coprocesador Matematico FPU*/
+	SCB -> CPACR |= (0xF << 20);
 
 	while(1){
 

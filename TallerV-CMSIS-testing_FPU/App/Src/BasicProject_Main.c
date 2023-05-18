@@ -8,7 +8,7 @@
  ******************************************************************************
  * @file           : BasicProyect_Main.c
  * @author         : Marianela Arcila Sanchez- maarcilasa
- * @brief          : The basic solution of a project with external libraries.
+ * @brief          : Test CMSIS -> DSP -> Absolute value
  ******************************************************************************
  * -
  * -
@@ -23,8 +23,12 @@
 #include "ExtiDriver.h"
 
 
+
 int main(void)
+
 {
+	/* Activamos el coprocesador Matematico FPU*/
+	SCB -> CPACR |= (0xF << 20);
 
 	while(1){
 
