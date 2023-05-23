@@ -2,7 +2,7 @@
  * PwmDriver.c
  *
  *  Created on: 21/05/2023
- *      Author: marianela
+ *      Author: Marianela Arcila Sanchez	maarcilasa
  *  In this program, we write about the control of the PWM peripheral.
  *  This control aims to be as generic as possible.
  */
