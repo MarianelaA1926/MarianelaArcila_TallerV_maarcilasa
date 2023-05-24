@@ -170,30 +170,46 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 
 
 	// 2.5 Baudrate Configuration (USART_BRR )
-	// See value table (Table 73), Freq = 16MHz, overr = 0;
-	if (ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_9600) {
-		/* The value to load is 104.1875 -> Mantissa = 104, fraction = 0.1875
-		 * Mantissa = 104 = 0x68, fraction = 16 * 0.1875 = 3
-		 * Value to load: 0x0683
-		 * Configuring the Baudrate generator for a speed of 9600bps
-		 */
-		ptrUsartHandler->ptrUSARTx->BRR = 0x0683;
-	}
+	//We configure the frecuency of the Micro MCU_frecuency
+	switch (ptrUsartHandler-> USART_Config.MCU_frecuency ){
+	case 16:{
 
-	else if (ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_19200) {
-		/* The value to load is 52.0625 -> Mantissa = 52, fraction = 0.0625
-		 * Mantissa = 52 = 0x34, fraction = 16 * 0.0625 = 1
-		 * Value to load: 0x0341
-		 */
-		ptrUsartHandler->ptrUSARTx->BRR = 0x0341;
-	}
+		// See value table (Table 73), Freq = 16MHz, overr = 0;
+		if (ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_9600) {
+			/* The value to load is 104.1875 -> Mantissa = 104, fraction = 0.1875
+			 * Mantissa = 104 = 0x68, fraction = 16 * 0.1875 = 3
+			 * Value to load: 0x0683
+			 * Configuring the Baudrate generator for a speed of 9600bps
+			 */
+			ptrUsartHandler->ptrUSARTx->BRR = 0x0683;
+		}
 
-	else if (ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_115200) {
-		/* The value to load is 8.6875 -> Mantissa = 8, fraction = 0.6875
-		 * Mantissa = 8 = 0x08; Fraction = 16 * 0.6875 = 11
-		 * Value to load: 0x08B
-	    */
-	    ptrUsartHandler->ptrUSARTx->BRR = 0x08B;
+		else if (ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_19200) {
+			/* The value to load is 52.0625 -> Mantissa = 52, fraction = 0.0625
+			 * Mantissa = 52 = 0x34, fraction = 16 * 0.0625 = 1
+			 * Value to load: 0x0341
+			 */
+			ptrUsartHandler->ptrUSARTx->BRR = 0x0341;
+		}
+
+		else if (ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_115200) {
+			/* The value to load is 8.6875 -> Mantissa = 8, fraction = 0.6875
+			 * Mantissa = 8 = 0x08; Fraction = 16 * 0.6875 = 11
+			 * Value to load: 0x08B
+			*/
+			ptrUsartHandler->ptrUSARTx->BRR = 0x08B;
+		}
+
+		break;
+	}
+	case 80:{
+
+
+
+
+
+		break;
+	}
 	}
 
 

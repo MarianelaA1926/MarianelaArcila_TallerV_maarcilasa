@@ -30,7 +30,7 @@ void i2c_config(I2C_Handler_t *ptrHandlerI2C){
 		RCC ->AHB1ENR |= RCC_APB1ENR_I2C1EN;
 	}
 	else if(ptrHandlerI2C -> ptrI2Cx == I2C3){
-			RCC ->AHB1ENR |= RCC_APB1ENR_I2C3EN;
+		RCC ->AHB1ENR |= RCC_APB1ENR_I2C3EN;
 		}
 
 	/* 2. We restart the peripheral to ensure it starts in a known state. */
