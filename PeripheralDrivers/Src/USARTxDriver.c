@@ -317,6 +317,7 @@ void USART2_IRQHandler(void) {
 		}
     }
 
+
 /* USART1 interrupt handler
  * All associated interrupts (TX, RX, PE) should be handled here*/
 void USART1_IRQHandler(void) {

@@ -15,19 +15,9 @@
 
 
 #define PLLP_2  0
-#define PLLP_4  1
-#define PLLP_6  2
-#define PLLP_8  3
-
-#define PLLN_50  50
-#define PLLN_99  99
-#define PLLN_100 200
-#define PLLN_200 200
-
-#define PLLM_2  2
-#define PLLM_3  3
+#define PLLN_80 80
 #define PLLM_4  4
-#define PLLM_16 16
+
 
 #define PLL_OFF  O
 #define PLL_ON   1
@@ -52,26 +42,14 @@ typedef struct{
 	uint8_t prescaler;
 	uint8_t PLLNfactor;
 	uint8_t PLLMfactor;
-	uint8_t hsiRdy;
-	uint8_t pll;
-	uint8_t pllRdy;
-	uint8_t latency;
-	uint8_t ahb;
-	uint8_t apb1;
-	uint8_t apb2;
-	uint8_t pllON;
-	uint8_t sw;
-	uint8_t sws;
+
 	uint8_t mco1;
-	uint8_t mco1Pre;
-	uint8_t vos;
 
 }PLL_Config_t;
 
 typedef struct{
 
 	PLL_Config_t  PLL_Config;
-	PWR_TypeDef  *pPWRx;
 
 }PLL_Handler_t;
 

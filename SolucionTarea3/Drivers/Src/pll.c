@@ -22,7 +22,8 @@ void configPll(PLL_Handler_t * prtFrequency){
 	 * This register controls the internal voltage. In this case,
 	 * since we need a frequency of 80MHz, we use the Scale 2 mode.
 	 */
-	PWR -> CR |= (2<<PWR_CR_VOS_Pos);
+
+	PWR -> CR |= (0b10<<PWR_CR_VOS_Pos);
 
 	/* 2) We configure the latency with the wait states in the Flash Memory.
 	 *    This is done in the ACR register, where the wait states are set to
@@ -38,24 +39,39 @@ void configPll(PLL_Handler_t * prtFrequency){
 	RCC->CR |= RCC_CR_PLLON;
 	while(! (RCC->CR & RCC_CR_PLLRDY ));
 
-	/*4)We activate the PLL clock in the CFGR register SW*/
+	/*4)We activate the PLL clock in the CFGR register SW  (SYSCLK)*/
 
 	RCC -> CFGR |= RCC_CFGR_SW_1;
 	while( !(RCC->CFGR & RCC_CFGR_SW_1));
 
-	/*We clear the preescaler in the CFGR-> HPRE register*/
+	/*We clear the preescaler in the CFGR-> HPRE register AHB*/
 	RCC -> CFGR &= ~(RCC_CFGR_HPRE);
 
 	/*We configure the prescaler in the MC01 output, We divide the prescaler in 5*/
-	RCC->CFGR |= (0b111 << RCC_CFGR_MCO1_Pos );
+	RCC->CFGR |= (RCC_CFGR_MCO1PRE_Msk);
 
 	/*We activate the output MC01*/
-	if(ptrFrecuencia->PLL_Config.mco1 == MCO1){
-	RCC->CFGR |=  RCC_CFGR_MCO1_1  ;
+	if(prtFrequency->PLL_Config.mco1 == MCO1){
+	RCC->CFGR |=  RCC_CFGR_MCO1;
 	}
 
-	/*we configure the prescaler*/
-	RCC->CFGR |= f(0b100 << 10);
+	/*we configure the prescaler APB1*/
+	RCC->CFGR |= RCC_CFGR_PPRE1_DIV16;
 
+
+
+	/*Now we configure the frequency to the PLL*/
+	if(prtFrequency->PLL_Config.prescaler == PLLP_2){
+			RCC->PLLCFGR |= RCC_PLLCFGR_PLLP_1; // se coloca un 2 en la pisicion 16 del registro PLLCFGR
+		}
+	if(prtFrequency->PLL_Config.PLLNfactor == PLLN_80){
+		RCC->PLLCFGR &= ~(0b111111111 << RCC_PLLCFGR_PLLN_Pos);
+		// se limpia el registro
+		RCC->PLLCFGR |= (0b1010000 << RCC_PLLCFGR_PLLN_Pos); // se agrega el valor 80 en la piscion 6 del registro PLLCFGR
+	}
+	if(prtFrequency->PLL_Config.PLLMfactor == PLLM_4){
+		RCC->PLLCFGR &= ~(0b111111 << RCC_PLLCFGR_PLLM_Pos); // se limpia el registo
+		RCC->PLLCFGR |= (0b100<< RCC_PLLCFGR_PLLM_Pos); // se agrega el valor 4 en la piscion 0 del registro PLLCFGR
+	}
 
 }
