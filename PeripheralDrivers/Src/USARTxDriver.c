@@ -50,13 +50,6 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	/* We configure the data size, parity, and stop bit. */
 
 
-	/* En el CR1 estan parity (PCE y PS) y tamaño del dato (M) */
-	/* Mientras que en CR2 estan los stopbit (STOP)*/
-	/* Configuracion del Baudrate (registro BRR) */
-	/* Configuramos el modo: only TX, only RX, o RXTX */
-	/* Por ultimo activamos el modulo USART cuando todo esta correctamente configurado */
-
-
 
 	/* The second step is to configure the CR1 register. In this register,
 	 * we define the parity, data size, and stop bit.
@@ -172,7 +165,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	// 2.5 Baudrate Configuration (USART_BRR )
 	//We configure the frecuency of the Micro MCU_frecuency
 	switch (ptrUsartHandler-> USART_Config.MCU_frecuency ){
-	case 16:{
+	case USART_MCU_FREQUENCY_16MHz:{
 
 		// See value table (Table 73), Freq = 16MHz, overr = 0;
 		if (ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_9600) {
@@ -202,11 +195,17 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 
 		break;
 	}
-	case 80:{
+	case USART_MCU_FREQUENCY_80MHz:{
 
 
 
-
+		if(ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_115200){
+			/* The value to load is 43.4027778 -> Mantissa = 43 , fraction 0.4027778
+			 * Mantissa = 43 -> 0x02B;    fraction 16*0.4027778 = 6,4444 aprx 6
+			 * Value to load: 0x02B8			 *
+			 */
+			ptrUsartHandler->ptrUSARTx->BRR = 0x02B6;
+		}
 
 		break;
 	}

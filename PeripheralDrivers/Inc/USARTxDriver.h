@@ -39,6 +39,9 @@
 #define USART_RX_INTERRUP_DISABLE 0
 #define USART_RX_INTERRUP_ENABLE  1
 
+#define USART_MCU_FREQUENCY_16MHz 0
+#define USART_MCU_FREQUENCY_80MHz 1
+
 /* Structure for communication configuration:
    Baudrate
    Data size
@@ -87,4 +90,6 @@ void usart2Rx_Callback(void);
 void usart6Rx_Callback(void);
 void USART_Config(USART_Handler_t *ptrUsartHandler);
 int writeChar(USART_Handler_t *ptrUsartHandler, int dataToSend );
+void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSed);
+uint8_t getRxData(void);
 #endif /* USARTXDRIVER_H_ */
