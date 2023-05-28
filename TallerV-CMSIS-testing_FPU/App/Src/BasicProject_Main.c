@@ -22,6 +22,7 @@
 #include "BasicTimer.h"
 #include "ExtiDriver.h"
 #include "USARTxDriver.h"
+#include "PllDriver.h"
 // Definicion de los handlers necesarios
 GPIO_Handler_t handlerStateLed = {0};
 GPIO_Handler_t handlerPinTx		= {0};
@@ -32,6 +33,11 @@ BasicTimer_Handler_t handlerStateTimer = {0};
 
 // Utiliza la conexion USB
 USART_Handler_t handlerUsart2 = {0};
+
+//Cambiamos la frecuencia del miro
+PLL_Handler_t handlerFrequency = {0};
+PLL_Handler_t handlerPll = {0};
+GPIO_Handler_t handlerMCO1Pin = {0};
 
 uint8_t rxData = 0;
 char bufferData[64];
@@ -50,6 +56,7 @@ void InitSystem(void);
 int main(void) {
 
 	// Inicializamos todos los elementos del sistema
+
 	InitSystem();
 
 	/* Loop forever */
@@ -86,6 +93,33 @@ int main(void) {
  * Funcion encargada de la inicializacion de los elementos del sistema
  */
 void InitSystem(void){
+
+
+	//--------------PLL-----------------------------------------------
+	// Se configura el pin A8 para que por este salga la frecuencia del reloj principal
+	handlerMCO1Pin.pGPIOx = GPIOA;
+	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
+	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
+	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinNumber = PIN_8;
+	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
+	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEED_FAST;
+
+	// Se carga la configuracion del pin A8
+	GPIO_Config(&handlerMCO1Pin);
+
+	// Se configura los parametros para la frecuencia
+	handlerFrequency. PLL_Config.frequency = MCU_FREQUENCY_80MHz;
+
+
+	// se carga la configuracion de los parametros de la nueva frecuencia
+
+	frequency(&handlerPll);
+	//configPll(&handlerPll);
+//__________________________________________________________________________
+
+
+
 
 	// Configurando el pin para el Led_Blinky
 	handlerStateLed.pGPIOx 								= GPIOA;
@@ -137,14 +171,17 @@ void InitSystem(void){
 	// Configurando el Timer2 para que funcione con el blinky
 	handlerStateTimer.ptrTIMx 						= TIM2;
 	handlerStateTimer.TIMx_Config.TIMx_mode			= BTIMER_MODE_UP;
-	handlerStateTimer.TIMx_Config.TIMx_speed		= BTIMER_SPEED_1ms;
-	handlerStateTimer.TIMx_Config.TIMx_period		= 250;
+	handlerStateTimer.TIMx_Config.TIMx_speed		= 80000;
+	handlerStateTimer.TIMx_Config.TIMx_period		= 30000;
+
 
 	// Cargamos la configuración del timer
 	BasicTimer_Config(&handlerStateTimer);
 
 	// Activamos el TIM2
 	starTimer(&handlerStateTimer);
+
+
 
 }
 

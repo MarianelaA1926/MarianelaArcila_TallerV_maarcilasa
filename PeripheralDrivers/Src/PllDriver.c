@@ -33,21 +33,6 @@ void configPll(PLL_Handler_t * prtFrequency){
 	FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
 
 
-	/*Now we configure the frequency to the PLL*/
-	if(prtFrequency->PLL_Config.prescaler == PLLP_2){
-			RCC->PLLCFGR |= RCC_PLLCFGR_PLLP_1; // se coloca un 2 en la pisicion 16 del registro PLLCFGR
-		}
-	if(prtFrequency->PLL_Config.PLLNfactor == PLLN_80){
-		RCC->PLLCFGR &= ~(0b111111111 << RCC_PLLCFGR_PLLN_Pos);
-		// se limpia el registro
-		RCC->PLLCFGR |= (0b1010000 << RCC_PLLCFGR_PLLN_Pos); // se agrega el valor 80 en la piscion 6 del registro PLLCFGR
-	}
-	if(prtFrequency->PLL_Config.PLLMfactor == PLLM_4){
-		RCC->PLLCFGR &= ~(0b111111 << RCC_PLLCFGR_PLLM_Pos); // se limpia el registo
-		RCC->PLLCFGR |= (0b100<< RCC_PLLCFGR_PLLM_Pos); // se agrega el valor 4 en la piscion 0 del registro PLLCFGR
-	}
-
-
 	/*3) We activate the PLL clock signal in the CR register to the RCC_PLLON
 	 * and wait for the clock to stabilize
 	 */
@@ -72,5 +57,27 @@ void configPll(PLL_Handler_t * prtFrequency){
 
 	/*we configure the prescaler APB1*/
 	RCC->CFGR |= RCC_CFGR_PPRE1_DIV16;
+
+}
+
+void frequency(PLL_Handler_t * prtFrequency){
+
+	/* Now we configure the frequency of the MCU. We establish three important values:
+	 * PLLN as 80, PLLM as 4. Then we calculate VCO as 16MHz * (80/4) = 320,
+	 * and calculate PLLP as 80MHz / VCO = 4."*/
+	if(prtFrequency->PLL_Config.frequency == MCU_FREQUENCY_80MHz){
+		//PLLP Register
+		RCC->PLLCFGR &= ~(0b11<<RCC_PLLCFGR_PLLP_Pos);
+		RCC->PLLCFGR |= (0b01<<RCC_PLLCFGR_PLLP_Pos );
+	    //PLPN Register
+		RCC->PLLCFGR &= ~(0b111111111 << RCC_PLLCFGR_PLLN_Pos);
+		// We clear the register
+		RCC->PLLCFGR |= (0b1010000 << RCC_PLLCFGR_PLLN_Pos);
+
+		//PLLM Register
+		RCC->PLLCFGR &= ~(0b111111 << RCC_PLLCFGR_PLLM_Pos);
+		//We clear the register
+		RCC->PLLCFGR |= (4<< RCC_PLLCFGR_PLLM_Pos);
+	}
 
 }
