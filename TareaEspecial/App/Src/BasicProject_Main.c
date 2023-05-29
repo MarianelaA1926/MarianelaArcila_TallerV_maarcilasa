@@ -61,7 +61,7 @@ int main(void) {
 
 	/* Loop forever */
 	while (1) {
-		//Se envia un mensaje
+		//Se envia un mensaje de prueba para comprobar la configuracion TX
 		sprintf(bufferData, "Hola mundo%u \n", numeroGrande);
 		writeMsg(&handlerUsart2, bufferData);
 
@@ -82,7 +82,7 @@ void InitSystem(void){
 	//--------------PLL-----------------------------------------------
 	// Se configura el pin A8 para que por este salga la frecuencia del reloj principal
 	//Esto es opcional
-	/*handlerMCO1Pin.pGPIOx = GPIOA;
+	handlerMCO1Pin.pGPIOx = GPIOA;
 	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
 	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
 	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinNumber = PIN_8;
@@ -100,7 +100,7 @@ void InitSystem(void){
 	// se carga la configuracion de los parametros de la nueva frecuencia
 
 	frequency(&handlerPll);
-	//configPll(&handlerPll);*/
+	//configPll(&handlerPll);
 //__________________________________________________________________________
 
 
@@ -152,15 +152,15 @@ void InitSystem(void){
 	GPIO_Config(&handlerPinRx);
 
 	// Configurando la comunicación serial (Cable verde es TX, Cable Blanco es RX)
-	handlerUsart2.ptrUSARTx 							= USART1;
-	handlerUsart2.USART_Config.MCU_frecuency  		    = USART_MCU_FREQUENCY_16MHz;
-	handlerUsart2.USART_Config.USART_baudrate			= USART_BAUDRATE_115200;
-	handlerUsart2.USART_Config.USART_datasize			= USART_DATASIZE_8BIT;
-	handlerUsart2.USART_Config.USART_parity				= USART_PARITY_NONE;
-	handlerUsart2.USART_Config.USART_stopbits			= USART_STOPBIT_2;
-	handlerUsart2.USART_Config.USART_mode				= USART_MODE_TX;
-	handlerUsart2.USART_Config.USART_enableInterrupt 	= USART_TX_INTERRUP_ENABLE;
-	handlerUsart2.USART_Config.USART_interruptTx 		= USART_TXE_INTERRUP_EVENT;
+	handlerUsart1.ptrUSARTx 							= USART1;
+	handlerUsart1.USART_Config.MCU_frecuency  		    = USART_MCU_FREQUENCY_16MHz;
+	handlerUsart1.USART_Config.USART_baudrate			= USART_BAUDRATE_115200;
+	handlerUsart1.USART_Config.USART_datasize			= USART_DATASIZE_8BIT;
+	handlerUsart1.USART_Config.USART_parity				= USART_PARITY_NONE;
+	handlerUsart1.USART_Config.USART_stopbits			= USART_STOPBIT_2;
+	handlerUsart1.USART_Config.USART_mode				= USART_MODE_TX;
+	handlerUsart1.USART_Config.USART_enableInterrupt 	= USART_TX_INTERRUP_ENABLE;
+	handlerUsart1.USART_Config.USART_interruptTx 		= USART_TXE_INTERRUP_EVENT;
 
 	// Cargamos la configuración del USART
 	USART_Config(&handlerUsart2);
