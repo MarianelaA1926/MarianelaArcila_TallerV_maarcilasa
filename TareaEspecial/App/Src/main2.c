@@ -122,8 +122,8 @@ void InitSystem(void){
 	GPIO_WritePin(&handlerStateLed, RESET);
 
 	/* Configurando los pines sobre los que funciona el USART2 (TX) */
-	handlerPinTx.pGPIOx 							= GPIOB;
-	handlerPinTx.GPIO_PinConfig.GPIO_PinNumber		= PIN_6;
+	handlerPinTx.pGPIOx 							= GPIOA;
+	handlerPinTx.GPIO_PinConfig.GPIO_PinNumber		= PIN_2;
 	handlerPinTx.GPIO_PinConfig.GPIO_PinMode		= GPIO_MODE_ALTFN;
 	handlerPinTx.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
 	handlerPinTx.GPIO_PinConfig.GPIO_PinSpeed		= GPIO_OSPEED_FAST;
@@ -132,7 +132,7 @@ void InitSystem(void){
 	GPIO_Config(&handlerPinTx);
 
 	/* Configurando los pines sobre los que funciona el USART2 (RX) */
-	handlerPinRx.pGPIOx 							= GPIOB;
+	handlerPinRx.pGPIOx 							= GPIOA;
 	handlerPinRx.GPIO_PinConfig.GPIO_PinNumber		= PIN_3;
 	handlerPinRx.GPIO_PinConfig.GPIO_PinMode		= GPIO_MODE_ALTFN;
 	handlerPinRx.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
@@ -142,7 +142,7 @@ void InitSystem(void){
 	GPIO_Config(&handlerPinRx);
 
 	// Configurando la comunicación serial (Cable verde es TX, Cable Blanco es RX)
-	handlerUsart2.ptrUSARTx 					= USART1;
+	handlerUsart2.ptrUSARTx 					= USART2;
 	handlerUsart2.USART_Config.USART_baudrate	= USART_BAUDRATE_115200;
 	handlerUsart2.USART_Config.USART_datasize	= USART_DATASIZE_8BIT;
 	handlerUsart2.USART_Config.USART_parity		= USART_PARITY_NONE;
@@ -165,7 +165,7 @@ void BasicTimer2_Callback(void){
  * El puerto es leido en la ISR (para bajar la bandera de la interrupción)
  * El caracter que se lee es devuelto por la función getRxData
  */
-void usart1_Callback(void){
+void usart2_Callback(void){
 	// Leemos el valor del registro DR, donde se almacena el dato que llega.
 	// Esto además debe bajar la bandera de la interrupción
 	rxData = getRxData();
