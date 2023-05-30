@@ -273,53 +273,53 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 			}
 			break;
 		//We define the interruption when the Transmit data register is empty(TXE)
-		case USART_TX_INTERRUP_ENABLE:
+	case USART_TX_INTERRUP_ENABLE:
 
-		 //We configure the TXE interrupt event in the CR1 Register
+	 //We configure the TXE interrupt event in the CR1 Register
 
-			if(ptrUsartHandler -> USART_Config.USART_interruptTx == USART_TXE_INTERRUP_EVENT){
+		if(ptrUsartHandler -> USART_Config.USART_interruptTx == USART_TXE_INTERRUP_EVENT){
 
-				/*This is done for each of the available options (USART 1, USART 2, USART 6) */
+			/*This is done for each of the available options (USART 1, USART 2, USART 6) */
 
-				ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_TXEIE;
+			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_TXEIE;
 
-				if (ptrUsartHandler->ptrUSARTx == USART1) {
-					__NVIC_EnableIRQ(USART1_IRQn);
+			if (ptrUsartHandler->ptrUSARTx == USART1) {
+				__NVIC_EnableIRQ(USART1_IRQn);
 
-				}
-				else if (ptrUsartHandler->ptrUSARTx == USART2) {
-					__NVIC_EnableIRQ(USART2_IRQn);
+			}
+			else if (ptrUsartHandler->ptrUSARTx == USART2) {
+				__NVIC_EnableIRQ(USART2_IRQn);
 
-				}
-				else if (ptrUsartHandler->ptrUSARTx == USART6) {
-					__NVIC_EnableIRQ(USART6_IRQn);
-				}
-				else {
-					break;
-				}
-
+			}
+			else if (ptrUsartHandler->ptrUSARTx == USART6) {
+				__NVIC_EnableIRQ(USART6_IRQn);
 			}
 			else {
-				ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_TCIE;
+				break;
+			}
 
-				/*This is done for each of the available options (USART 1, USART 2, USART 6) */
-				if (ptrUsartHandler->ptrUSARTx == USART1) {
-					__NVIC_EnableIRQ(USART1_IRQn);
+		}
+		else {
+			ptrUsartHandler->ptrUSARTx->CR1 |= USART_CR1_TCIE;
 
-				}
-				else if (ptrUsartHandler->ptrUSARTx == USART2) {
-					__NVIC_EnableIRQ(USART2_IRQn);
-
-				}
-				else if (ptrUsartHandler->ptrUSARTx == USART6) {
-					__NVIC_EnableIRQ(USART6_IRQn);
-				}
-				else {
-
-				}
+			/*This is done for each of the available options (USART 1, USART 2, USART 6) */
+			if (ptrUsartHandler->ptrUSARTx == USART1) {
+				__NVIC_EnableIRQ(USART1_IRQn);
 
 			}
-			break;
+			else if (ptrUsartHandler->ptrUSARTx == USART2) {
+				__NVIC_EnableIRQ(USART2_IRQn);
+
+			}
+			else if (ptrUsartHandler->ptrUSARTx == USART6) {
+				__NVIC_EnableIRQ(USART6_IRQn);
+			}
+			else {
+
+			}
+
+		}
+		break;
 
 	}
 
@@ -375,7 +375,7 @@ void USART2_IRQHandler(void) {
 
 		}
 
-	if (USART2->SR & USART_SR_TXE) {
+	else if (USART2->SR & USART_SR_TXE) {
 		auxTxData = (uint8_t)USART2 ->DR;
 		usart2_Callback();
 		/*  The system requests to clean the DR (Data Register) every time a character
@@ -386,7 +386,7 @@ void USART2_IRQHandler(void) {
 	}
 
 
-	if (USART2->SR & USART_SR_TC) {
+	else if (USART2->SR & USART_SR_TC) {
 		auxTxData = (uint8_t)USART2 -> DR;
 		usart2_Callback();
 

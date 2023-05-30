@@ -92,12 +92,12 @@ uint64_t tic = 0;
 // Dirección del dispositivo ADXL354
 #define ADXL354_SLAVE_ADDRESS 0x53
 
-#define ACCEL_XOUT_H   59
-#define ACCEL_XOUT_L   60
-#define ACCEL_YOUT_H   61
-#define ACCEL_YOUT_L   62
-#define ACCEL_ZOUT_H   61
-#define ACCEL_ZOUT_L   62
+#define ACCEL_XOUT_H   50
+#define ACCEL_XOUT_L   51
+#define ACCEL_YOUT_H   52
+#define ACCEL_YOUT_L   53
+#define ACCEL_ZOUT_H   54
+#define ACCEL_ZOUT_L   55
 
 #define ADXL354_CONFIG_REG 0x2D
 
@@ -142,50 +142,13 @@ int main(void) {
 	while (1) {
 
 
-		//Se envia un mensaje de prueba para comprobar la configuracion TX
-		//if(rxData == 'x'){
-			//sprintf(bufferData, "Hola mundo%u \n", numeroGrande);
-			//writeMsg(&handlerUsart1, bufferData);
-		//}
-		if((rxData == 'x')){
-		sprintf(bufferData, "Axis X data (r)\n");
-		//writeMsg(&handlerUsart2, bufferData);
-		uint8_t AccelX_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_L);
-		uint8_t AccelX_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_H);
-		int16_t AccelX = AccelX_high <<8 | AccelX_low;
-		sprintf(bufferData, "AccelX = %d\n", (int)AccelX);
-		writeMsg(&handlerUsart2, bufferData);
-		rxData = '\0';
-		}
-		else if(rxData == 'y'){
-			sprintf(bufferData, "Axis Y data (r)\n");
-			writeMsg(&handlerUsart2, bufferData);
-			uint8_t AccelY_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_YOUT_L);
-			uint8_t AccelY_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_YOUT_H);
-			int16_t AccelY = AccelY_high << 8 | AccelY_low;
+		writeChar(&handlerUsart1, 's');
 
-			sprintf(bufferData, "AccelY= %d\n", (int)AccelY);
-			writeMsg(&handlerUsart2, bufferData);
-			rxData = '\0';
-		}
-		else if(rxData == 'z'){
-
-			sprintf(bufferData, "Axis Z data (r)\n");
-			writeMsg(&handlerUsart2, bufferData);
-			uint8_t AccelZ_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_ZOUT_L);
-			uint8_t AccelZ_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_ZOUT_H);
-			int16_t AccelZ = AccelZ_high << 8 | AccelZ_low;
-
-			sprintf(bufferData, "AccelZ = %d\n", (int)AccelZ);
-			writeMsg(&handlerUsart2, bufferData);
-			rxData = '\0';
-		}
+		//Prueba LSD
+		LCDBienvenida();
 
 
 	}
-
-
-
 
 	return 0;
 }
@@ -210,7 +173,7 @@ void InitSystem(void){
 	//--------------PLL-----------------------------------------------
 	// Se configura el pin A8 para que por este salga la frecuencia del reloj principal
 	//Esto es opcional
-/*	handlerMCO1Pin.pGPIOx = GPIOA;
+	handlerMCO1Pin.pGPIOx = GPIOA;
 	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
 	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
 	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinNumber = PIN_8;
@@ -236,7 +199,7 @@ void InitSystem(void){
 
 
 
-	*/
+
 //__________________________________________________________________________
 
 
@@ -268,38 +231,38 @@ void InitSystem(void){
 	GPIO_WritePin(&handlerStateLed, RESET);
 
 	/* Configurando los pines sobre los que funciona el USART2 (TX) */
-/*	handlerPinTx.pGPIOx 							= GPIOA;
-	handlerPinTx.GPIO_PinConfig.GPIO_PinNumber		= PIN_9;
+	handlerPinTx.pGPIOx 							= GPIOC;
+	handlerPinTx.GPIO_PinConfig.GPIO_PinNumber		= PIN_6;
 	handlerPinTx.GPIO_PinConfig.GPIO_PinMode		= GPIO_MODE_ALTFN;
 	handlerPinTx.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
 	handlerPinTx.GPIO_PinConfig.GPIO_PinSpeed		= GPIO_OSPEED_FAST;
 	handlerPinTx.GPIO_PinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
 	handlerPinTx.GPIO_PinConfig.GPIO_PinAltFunMode	= AF7;
-	GPIO_Config(&handlerPinTx);*/
+	GPIO_Config(&handlerPinTx);
 
 	/* Configurando los pines sobre los que funciona el USART2 (RX) */
-	/*handlerPinRx.pGPIOx 							= GPIOA;
-	handlerPinRx.GPIO_PinConfig.GPIO_PinNumber		= PIN_10;
+	handlerPinRx.pGPIOx 							= GPIOC;
+	handlerPinRx.GPIO_PinConfig.GPIO_PinNumber		= PIN_7;
 	handlerPinRx.GPIO_PinConfig.GPIO_PinMode		= GPIO_MODE_ALTFN;
 	handlerPinRx.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
 	handlerPinRx.GPIO_PinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
 	handlerPinRx.GPIO_PinConfig.GPIO_PinSpeed		= GPIO_OSPEED_FAST;
 	handlerPinRx.GPIO_PinConfig.GPIO_PinAltFunMode	= AF7;
-	GPIO_Config(&handlerPinRx);*/
+	GPIO_Config(&handlerPinRx);
 
 	// Configurando la comunicación serial (Cable verde es TX, Cable Blanco es RX)
-	/*handlerUsart1.ptrUSARTx 							= USART1;
-	handlerUsart1.USART_Config.MCU_frecuency  		    = USART_MCU_FREQUENCY_16MHz;
+	handlerUsart1.ptrUSARTx 							= USART1;
+	handlerUsart1.USART_Config.MCU_frecuency  		    = USART_MCU_FREQUENCY_80MHz;
 	handlerUsart1.USART_Config.USART_baudrate			= USART_BAUDRATE_115200;
 	handlerUsart1.USART_Config.USART_datasize			= USART_DATASIZE_8BIT;
 	handlerUsart1.USART_Config.USART_parity				= USART_PARITY_NONE;
 	handlerUsart1.USART_Config.USART_stopbits			= USART_STOPBIT_2;
 	handlerUsart1.USART_Config.USART_mode				= USART_MODE_TX;
 	handlerUsart1.USART_Config.USART_enableInterrupt 	= USART_TX_INTERRUP_ENABLE;
-	handlerUsart1.USART_Config.USART_interruptTx 		= USART_TXE_INTERRUP_EVENT;
+
 
 	// Cargamos la configuración del USART
-	USART_Config(&handlerUsart1);*/
+	USART_Config(&handlerUsart1);
 
 
 //____________________________________________________________________________________________________________________________________________
@@ -336,47 +299,13 @@ void InitSystem(void){
 
 	i2c_config(&handlerAccelerometer);
 
-// Configurando la comunicación serial (Cable verde es TX, Cable Blanco es RX)
-
-	/* Configurando los pines sobre los que funciona el USART2 (TX) */
-	handlerPinTx.pGPIOx 							= GPIOA;
-	handlerPinTx.GPIO_PinConfig.GPIO_PinNumber		= PIN_2;
-	handlerPinTx.GPIO_PinConfig.GPIO_PinMode		= GPIO_MODE_ALTFN;
-	handlerPinTx.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
-	handlerPinTx.GPIO_PinConfig.GPIO_PinSpeed		= GPIO_OSPEED_FAST;
-	handlerPinTx.GPIO_PinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
-	handlerPinTx.GPIO_PinConfig.GPIO_PinAltFunMode	= AF7;
-	GPIO_Config(&handlerPinTx);
-
-	/* Configurando los pines sobre los que funciona el USART2 (RX) */
-	handlerPinRx.pGPIOx 							= GPIOA;
-	handlerPinRx.GPIO_PinConfig.GPIO_PinNumber		= PIN_3;
-	handlerPinRx.GPIO_PinConfig.GPIO_PinMode		= GPIO_MODE_ALTFN;
-	handlerPinRx.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
-	handlerPinRx.GPIO_PinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
-	handlerPinRx.GPIO_PinConfig.GPIO_PinSpeed		= GPIO_OSPEED_FAST;
-	handlerPinRx.GPIO_PinConfig.GPIO_PinAltFunMode	= AF7;
-	GPIO_Config(&handlerPinRx);
-
-	handlerUsart2.ptrUSARTx 							= USART2;
-	handlerUsart2.USART_Config.MCU_frecuency  		    = USART_MCU_FREQUENCY_16MHz;
-	handlerUsart2.USART_Config.USART_baudrate			= USART_BAUDRATE_115200;
-	handlerUsart2.USART_Config.USART_datasize			= USART_DATASIZE_8BIT;
-	handlerUsart2.USART_Config.USART_parity				= USART_PARITY_NONE;
-	handlerUsart2.USART_Config.USART_stopbits			= USART_STOPBIT_2;
-	handlerUsart2.USART_Config.USART_mode				= USART_MODE_RXTX;
-	handlerUsart2.USART_Config.USART_enableInterrupt 	= USART_TX_INTERRUP_ENABLE;
-	handlerUsart2.USART_Config.USART_interruptTx 		= USART_TXE_INTERRUP_EVENT;
-
-	// Cargamos la configuración del USART
-	USART_Config(&handlerUsart2);
 
 
 //________________________________________________________________________________________________________
 
 
 
-
+//------------------------------PWM-------------------------------------------------------------
 
 	// Configuracion para el eje X
 	PWM_HandlerXPin.pGPIOx = GPIOB;
@@ -474,11 +403,6 @@ void InitSystem(void){
    	LCD_Config(&handlerLCD);
 
 
-
-
-
-
-
 }
 
 
@@ -488,7 +412,7 @@ void LCDBienvenida(void){
 	LCD_sendSTR(&handlerLCD,"Bienvenida M",LCD_ADRESS);
 
 	LCD_setCursor(&handlerLCD,2,0,LCD_ADRESS);
-	LCD_sendSTR(&handlerLCD,"Escriba ",LCD_ADRESS);
+	LCD_sendSTR(&handlerLCD,"Escribe lo que quieras ",LCD_ADRESS);
 
 			for (int i=0;i<10000;i++);
 
@@ -503,12 +427,12 @@ void BasicTimer2_Callback(void){
  * El puerto es leido en la ISR (para bajar la bandera de la interrupción)
  * El caracter que se lee es devuelto por la función getRxData
  */
-void usart1_Callback(void){
+/*void usart1_Callback(void){
 	// Leemos el valor del registro DR, donde se almacena el dato que llega.
 	// Esto además debe bajar la bandera de la interrupción
 	txData = getTxData();
 }
-
+*/
 void usart2_Callback(void){
 	// Leemos el valor del registro DR, donde se almacena el dato que llega.
 	// Esto además debe bajar la bandera de la interrupción
