@@ -33,7 +33,7 @@ void pwm_Config(PWM_Handler_t *ptrPwmHandler){
 	setFrequency(ptrPwmHandler);
 
 	/* 2. Load the duty cycle value */
-	setDutyCycle(ptrPwmHandler);
+	setDuttyCycle(ptrPwmHandler);
 
 	/* 2a. We are in UP_Mode, the limit is loaded in ARR and starts from 0 */
 	ptrPwmHandler->ptrTIMx->CR1 &= ~TIM_CR1_DIR;

@@ -24,6 +24,8 @@
 #include "USARTxDriver.h"
 #include "PllDriver.h"
 #include "I2CDriver.h"
+#include "PwmDriver.h"
+#include "LcdDriver.h"
 
 
 // Definicion de los handlers necesarios
@@ -53,23 +55,79 @@ GPIO_Handler_t handlerI2cSDA = {0};
 GPIO_Handler_t handlerI2cSCL = {0};
 I2C_Handler_t handlerAccelerometer = {0};
 uint8_t i2cBuffer = 0;
-// Direcciones de memora del acelerometro MPU 6050
+
+//---PWM
+PWM_Handler_t PWM_HandlerX = {0};
+GPIO_Handler_t PWM_HandlerXPin = {0};
+
+PWM_Handler_t PWM_HandlerY = {0};
+GPIO_Handler_t PWM_HandlerYPin = {0};
+
+PWM_Handler_t PWM_HandlerZ = {0};
+GPIO_Handler_t PWM_HandlerZPin = {0};
+BasicTimer_Handler_t PWM = {0};
+
+
+uint16_t duttyR = 50;
+uint16_t duttyG = 50;
+uint16_t duttyB = 50;
+uint16_t dutty = 50;
+
+uint8_t contador = 10;
+
+uint8_t banderaAcelerometro = 0;
+
+//---LCD
+GPIO_Handler_t handlerLCDI2cSDA = {0};
+GPIO_Handler_t handlerLCDI2cSCL = {0};
+LCD_Handler_t handlerLCD = {0};
+uint8_t commandLCD = 0;
+uint8_t commandLED = 0;
+uint8_t caso = 0;
+uint64_t tic = 0;
+
+
+
 
 // Dirección del dispositivo ADXL354
 #define ADXL354_SLAVE_ADDRESS 0x53
 
-// Registro de configuración del ADXL354
+#define ACCEL_XOUT_H   59
+#define ACCEL_XOUT_L   60
+#define ACCEL_YOUT_H   61
+#define ACCEL_YOUT_L   62
+#define ACCEL_ZOUT_H   61
+#define ACCEL_ZOUT_L   62
+
 #define ADXL354_CONFIG_REG 0x2D
 
-// Valor de configuración para el registro de configuración
-#define ADXL354_CONFIG_VALUE 0x01
-
-// Variables a enviar a través del USART2
+// Variables a enviar a través del USART1
 unsigned int numeroGrande = 1682539;
+
+
+//LCD
+// Direccion de memoria del LCD LCM2004A1
+#define LCD_ADRESS   0b100111
+
+
+void initSystem (void);
+
+void parseCommands(char *ptrBufferReception);
+
+void LCDBienvenida(void);
+
+
+
+
 
 /* Definición de prototipos de funciones */
 void InitSystem(void);
-void ADXL354_Config();
+void LCDBienvenida(void);
+
+
+
+
+
 /**
  * Funcion principal del programa.
  * Esta funcion es el corazón del programa!!
@@ -79,27 +137,26 @@ int main(void) {
 
 	// Inicializamos todos los elementos del sistema
 	InitSystem();
-	// Función para configurar el ADXL354 como esclavo
-	// Enviar la configuración al ADXL354
-	i2c_writeSingleRegister(&handlerAccelerometer,  ADXL354_CONFIG_REG, ADXL354_CONFIG_VALUE);
 
 	/* Loop forever */
 	while (1) {
+
+
 		//Se envia un mensaje de prueba para comprobar la configuracion TX
 		//if(rxData == 'x'){
 			//sprintf(bufferData, "Hola mundo%u \n", numeroGrande);
 			//writeMsg(&handlerUsart1, bufferData);
 		//}
-
-	//	sprintf(bufferData, "Axis X data (r)\n");
+		if((rxData == 'x')){
+		sprintf(bufferData, "Axis X data (r)\n");
 		//writeMsg(&handlerUsart2, bufferData);
-		/*	uint8_t AccelX_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_L);
+		uint8_t AccelX_low = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_L);
 		uint8_t AccelX_high = i2c_readSingleRegister(&handlerAccelerometer, ACCEL_XOUT_H);
 		int16_t AccelX = AccelX_high <<8 | AccelX_low;
 		sprintf(bufferData, "AccelX = %d\n", (int)AccelX);
 		writeMsg(&handlerUsart2, bufferData);
 		rxData = '\0';
-
+		}
 		else if(rxData == 'y'){
 			sprintf(bufferData, "Axis Y data (r)\n");
 			writeMsg(&handlerUsart2, bufferData);
@@ -122,7 +179,7 @@ int main(void) {
 			sprintf(bufferData, "AccelZ = %d\n", (int)AccelZ);
 			writeMsg(&handlerUsart2, bufferData);
 			rxData = '\0';
-		}*/
+		}
 
 
 	}
@@ -315,6 +372,106 @@ void InitSystem(void){
 	USART_Config(&handlerUsart2);
 
 
+//________________________________________________________________________________________________________
+
+
+
+
+
+	// Configuracion para el eje X
+	PWM_HandlerXPin.pGPIOx = GPIOB;
+	PWM_HandlerXPin.GPIO_PinConfig.GPIO_PinAltFunMode = AF2;
+	PWM_HandlerXPin.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
+	PWM_HandlerXPin.GPIO_PinConfig.GPIO_PinNumber = PIN_1;
+	PWM_HandlerXPin.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_OPENDRAIN;
+	PWM_HandlerXPin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
+	PWM_HandlerXPin.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEED_FAST;
+
+	GPIO_Config(&PWM_HandlerZPin);
+
+	PWM_HandlerX.ptrTIMx = TIM3;
+	PWM_HandlerX.config.channel = PWM_CHANNEL_4;
+	PWM_HandlerX.config.dutyCycle = 15;
+	PWM_HandlerX.config.period = 30;
+	PWM_HandlerX.config.prescaler = 1600;
+
+	pwm_Config(&PWM_HandlerX);
+	//startPwmSignal(&PWM_HandlerR);
+	enableOutput(&PWM_HandlerX);
+
+	//Configuracion para el eje Y
+	PWM_HandlerYPin.pGPIOx = GPIOB;
+	PWM_HandlerYPin.GPIO_PinConfig.GPIO_PinAltFunMode = AF2;
+	PWM_HandlerYPin.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
+	PWM_HandlerYPin.GPIO_PinConfig.GPIO_PinNumber = PIN_0;
+	PWM_HandlerYPin.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_OPENDRAIN;
+	PWM_HandlerYPin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
+	PWM_HandlerYPin.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEED_FAST;
+
+	GPIO_Config(&PWM_HandlerYPin);
+
+	PWM_HandlerY.ptrTIMx = TIM3;
+	PWM_HandlerY.config.channel = PWM_CHANNEL_3;
+	PWM_HandlerY.config.dutyCycle = 15;
+	PWM_HandlerY.config.period = 30;
+	PWM_HandlerY.config.prescaler = 1600;
+
+	pwm_Config(&PWM_HandlerY);
+	//startPwmSignal(&PWM_HandlerG);
+	enableOutput(&PWM_HandlerY);
+
+	// Configuracion para el Eje Z
+	PWM_HandlerZPin.pGPIOx = GPIOB;
+	PWM_HandlerZPin.GPIO_PinConfig.GPIO_PinAltFunMode = AF2;
+	PWM_HandlerZPin.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
+	PWM_HandlerZPin.GPIO_PinConfig.GPIO_PinNumber = PIN_4;
+	PWM_HandlerZPin.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_OPENDRAIN;
+	PWM_HandlerZPin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_PULLUP;
+	PWM_HandlerZPin.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEED_FAST;
+
+	GPIO_Config(&PWM_HandlerZPin);
+
+	PWM_HandlerZ.ptrTIMx = TIM3;
+	PWM_HandlerZ.config.channel = PWM_CHANNEL_1;
+	PWM_HandlerZ.config.dutyCycle = 15;
+	PWM_HandlerZ.config.period = 30;
+	PWM_HandlerZ.config.prescaler = 1600;
+
+	pwm_Config(&PWM_HandlerZ);
+	//startPwmSignal(&PWM_HandlerB);
+	enableOutput(&PWM_HandlerZ);
+
+
+//________________________________________________________________________________________________
+	//------------------------------------LCD------------------------------------------------------
+
+   	handlerLCDI2cSCL.pGPIOx                                 = GPIOB ;//puerto B para recepcion de datos
+   	handlerLCDI2cSCL.GPIO_PinConfig.GPIO_PinNumber          = PIN_6;//pin 6 activado para recepcion de datos
+   	handlerLCDI2cSCL.GPIO_PinConfig.GPIO_PinMode            = GPIO_MODE_ALTFN ; // salida
+   	handlerLCDI2cSCL.GPIO_PinConfig.GPIO_PinOPType          = GPIO_OTYPE_OPENDRAIN;
+   	handlerLCDI2cSCL.GPIO_PinConfig.GPIO_PinPuPdControl     = GPIO_PUPDR_PULLUP;
+   	handlerLCDI2cSCL.GPIO_PinConfig.GPIO_PinSpeed           = GPIO_OSPEED_FAST;
+   	handlerLCDI2cSCL.GPIO_PinConfig.GPIO_PinAltFunMode      = AF4 ; // funcion alternativa
+
+   	GPIO_Config(&handlerLCDI2cSCL);
+
+
+   	//configuramos los pines sobre los que funciona el 	LCD
+   	handlerLCDI2cSDA.pGPIOx                                 = GPIOB ;//puerto B para recepcion de datos
+   	handlerLCDI2cSDA.GPIO_PinConfig.GPIO_PinNumber          = PIN_7;//pin 7 activado para recepcion de datos
+   	handlerLCDI2cSDA.GPIO_PinConfig.GPIO_PinMode            = GPIO_MODE_ALTFN ; // salida
+   	handlerLCDI2cSDA.GPIO_PinConfig.GPIO_PinOPType          = GPIO_OTYPE_OPENDRAIN;
+   	handlerLCDI2cSDA.GPIO_PinConfig.GPIO_PinPuPdControl     = GPIO_PUPDR_PULLUP;
+   	handlerLCDI2cSDA.GPIO_PinConfig.GPIO_PinSpeed           = GPIO_OSPEED_FAST;
+   	handlerLCDI2cSDA.GPIO_PinConfig.GPIO_PinAltFunMode      = AF4 ; // funcion alternativa
+
+   	GPIO_Config(&handlerLCDI2cSDA);
+
+   	handlerLCD.ptrLCDx         = I2C1 ;//
+   	handlerLCD.modeLCD         = I2C_MODE_SM;//I2C_MODE_FM
+   	handlerLCD.slaveAddressLCD = LCD_ADRESS;//0b0100111
+
+   	LCD_Config(&handlerLCD);
 
 
 
@@ -322,9 +479,18 @@ void InitSystem(void){
 
 
 
+}
 
 
 
+void LCDBienvenida(void){
+	LCD_setCursor(&handlerLCD,0,0,LCD_ADRESS);
+	LCD_sendSTR(&handlerLCD,"Bienvenida M",LCD_ADRESS);
+
+	LCD_setCursor(&handlerLCD,2,0,LCD_ADRESS);
+	LCD_sendSTR(&handlerLCD,"Escriba ",LCD_ADRESS);
+
+			for (int i=0;i<10000;i++);
 
 }
 
@@ -348,3 +514,5 @@ void usart2_Callback(void){
 	// Esto además debe bajar la bandera de la interrupción
 	rxData = getTxData();
 }
+
+

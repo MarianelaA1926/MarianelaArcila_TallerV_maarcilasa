@@ -40,7 +40,7 @@ typedef struct
 void pwm_Config(PWM_Handler_t *ptrPwmHandler);
 void setFrequency(PWM_Handler_t *ptrPwmHandler);
 void updateFrequency(PWM_Handler_t *ptrPwmHandler, uint16_t newFreq);
-void setDutyCycle(PWM_Handler_t *ptrPwmHandler);
+void setDuttyCycle(PWM_Handler_t *ptrPwmHandler);
 void updateDutyCycle(PWM_Handler_t *ptrPwmHandler, uint16_t newDuty);
 void enableOutput(PWM_Handler_t *ptrPwmHandler);
 void startPwmSignal(PWM_Handler_t *ptrPwmHandler);
