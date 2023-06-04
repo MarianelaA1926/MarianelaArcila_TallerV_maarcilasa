@@ -25,6 +25,13 @@
  ******************************************************************************
  */
 
+// se incluyen archivos de cabecera que necesitamos en el proyecto
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+
 #include "stm32f4xx.h"
 #include "GPIOxDriver.h"
 #include "BasicTimer.h"
@@ -44,13 +51,22 @@ USART_Handler_t handlerUsart2 = {0};
 
 uint8_t rxData = 0;
 char bufferData[64];
+char cmd[64];
+#define BUFFER_SIZE 150
+char bufferReception[BUFFER_SIZE];
+uint8_t counterReception;
+bool stringComplete = false;
+char userMsg[64] = "\0";
 
-// Variables a enviar a través del USART2
-unsigned int numeroGrande = 1682539;
+unsigned int firstParameter;
+unsigned int secondParameter;
+unsigned int secondParameter;
+
+
 
 /* Definición de prototipos de funciones */
 void InitSystem(void);
-
+void parseCommands(char *prtBufferReception);
 /**
  * Funcion principal del programa.
  * Esta funcion es el corazón del programa!!
@@ -64,32 +80,89 @@ int main(void) {
 	/* Loop forever */
 	while (1) {
 
-		// El sistema siempre está verificando si el valor de rxData ha cambiado
-        // (lo cual sucede en la ISR de la recepcion (RX).
-        // Si este valor deja de ser '\0' significa que se recibio un caracter
-        // por lo tanto entra en el bloque if para analizar que se recibio
-		if(rxData != '\0'){
-			// Imprimimos el caracter recibido (O)
-            writeChar(&handlerUsart2, rxData);
-
-			if(rxData == 's'){
-
-				// ****** // ESCRIBA AQUI SU CODIGO // ****** //
-
-				// Función SprintF paa convertir a strig una cadena y poder enviarla
-				//Se parte el strig
-				sprintf(bufferData, "Hola mundo%u \n", numeroGrande);
-				writeMsg(&handlerUsart2, bufferData);
-				}
 
 
-			// Bajamos la bandera
+		// Creamos una cadena de caracteres con los datos que llegan por el
+		// El caracter '@' nos indica que es el finall de la cadena
+		if (rxData !=0){
+			bufferReception[counterReception] = rxData;
+			counterReception++;
+			// si el carácter entrante es una nueva línea, establece una bandera
+			// para que el ciclo principal pueda hacer algo al respecto:
+			if ( rxData == '@'){
+				stringComplete = true;
+				// Agrego esta linea para crear el string con el null al fin
+				bufferReception[counterReception] = '\0';
+				counterReception = 0;
+			}
+			//Para ue no vuelva a entrar. Solo cambia debido a la interrupción
 			rxData = '\0';
 		}
+		//Hacemos un analisis de la cadena de datos obtenida
+		if(stringComplete){
+			parseCommands(bufferReception);
+			stringComplete = false;
+		}
+
+
 	}
 
 	return 0;
 }
+
+
+
+
+void parseCommands(char *prtBufferReception){
+
+	// Esta función de C lee la cadena de caracteres a la que apunta el "ptr" y la divide
+	// y almacena en tres elementos diferentes: un string llamado "cmd",y dos numeros
+	// integer llamados "firstPardlneter" y "SecondParameter".
+	// De esta forma, podemos introducir información al micro desde el puerto
+	sscanf(prtBufferReception, "%s %u %u %s", cmd, &firstParameter, &secondParameter, userMsg);
+
+	// Este primer comando imprime una lista con los otros comandos que tiene el equipo
+	if(strcmp(cmd, "help") == 0){
+
+		writeMsg(&handlerUsart2, "Help Menu CMDs:\n");
+		writeMsg(&handlerUsart2, "1) help    -- Print this menu\n");
+		writeMsg(&handlerUsart2, "2) dummy #A #B -- dummy cmd, #A and #B are uint32_t\n");
+		writeMsg(&handlerUsart2, "3) usermsg # # msg -- msg is a string comming from outside\n");
+		writeMsg(&handlerUsart2, "4) initLcd -- simple Test for the LCD\n");
+		writeMsg(&handlerUsart2, "5) testLcd -- simple Test for the LCD\n");
+		writeMsg(&handlerUsart2, "6) setPeriod  -- Change the Led_state period (us)\n");
+		writeMsg(&handlerUsart2, "7) autoUpdate # -- Automatic LCD update (# -> 1/0\n)");
+	}
+	// El comando dummy sirve para entender como funciona la recepción de números enviados
+	// desde la consola
+	else if (strcmp(cmd,"dummy")== 0) {
+		writeMsg (&handlerUsart2,"CMD: dummy\n" ) ;
+		// Cambiando el formato para presentar el número por el puerto serial
+		sprintf(bufferData,"number A = %u\n",firstParameter);
+		writeMsg(&handlerUsart2, bufferData);
+
+		// Cambiando el formato para presentar el número por el puerto serial
+		sprintf(bufferData,"number B= %u\n", secondParameter) ;
+		writeMsg (&handlerUsart2, bufferData);
+	}
+
+	else if (strcmp(cmd,"stateled")== 0) {
+		handlerStateTimer.TIMx_Config.TIMx_speed		= BTIMER_SPEED_1ms;
+		handlerStateTimer.TIMx_Config.TIMx_period		= 50;
+		// Cargamos la configuración del timer
+		BasicTimer_Config(&handlerStateTimer);
+
+		// Activamos el TIM2
+		starTimer(&handlerStateTimer);
+		writeMsg(&handlerUsart2, "Se prueba con el led de estado aumentado la velocidad");
+
+
+	}
+
+
+}
+
+
 
 /*
  * Funcion encargada de la inicializacion de los elementos del sistema

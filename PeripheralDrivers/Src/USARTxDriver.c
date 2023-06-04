@@ -31,7 +31,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	 * different clocks for the possible modules (USART1, USART2, USART6) */
 
 	/* USART1 */
-		if(ptrUsartHandler->ptrUSARTx == USART1){
+	if(ptrUsartHandler->ptrUSARTx == USART1){
 		/* This is the bus that USART1 uses for the signal clock*/
 		RCC -> APB2ENR |= RCC_APB2ENR_USART1EN;
 	}
@@ -405,10 +405,12 @@ void USART2_IRQHandler(void) {
 /* USART1 interrupt handler
  * All associated interrupts (TX, RX, PE) should be handled here*/
 void USART1_IRQHandler(void) {
+
 	if (USART1->SR & USART_SR_RXNE) {
 		auxRxData = (uint8_t)USART1->DR;
 		usart1_Callback();
 		}
+
 	if (USART1->SR & USART_SR_TXE) {
 		auxTxData = (uint8_t)USART1 ->DR;
 		usart1_Callback();
@@ -426,7 +428,7 @@ void USART1_IRQHandler(void) {
 		usart1_Callback();}
 	/*  The system requests to clean the DR (Data Register) every time a character
 	 *  is about to be sent, therefore clearing the DR register and setting the event to 0.*/
-		USART1->DR &= 0;
+	    USART1->DR &= 0;
 		USART1->CR1 &= ~(USART_CR1_TCIE);
 
 
