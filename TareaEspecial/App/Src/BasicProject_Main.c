@@ -186,11 +186,14 @@ void InitSystem(void){
 
 	// Se configura los parametros para la frecuencia
 	handlerFrequency. PLL_Config.frequency = MCU_FREQUENCY_80MHz;
-
-
 	// se carga la configuracion de los parametros de la nueva frecuencia
-
 	frequency(&handlerPll);
+
+	//Se configura el MCO
+
+
+
+
 	//configPll(&handlerPll);
 
 

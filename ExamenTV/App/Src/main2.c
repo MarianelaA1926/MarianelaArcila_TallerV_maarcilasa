@@ -36,7 +36,7 @@
 #include "GPIOxDriver.h"
 #include "BasicTimer.h"
 #include "USARTxDriver.h"
-
+#include "PllDriver.h"
 
 // Definicion de los handlers necesarios
 GPIO_Handler_t handlerStateLed = {0};
@@ -61,6 +61,13 @@ char userMsg[64] = "\0";
 unsigned int firstParameter;
 unsigned int secondParameter;
 unsigned int secondParameter;
+
+//Pll
+
+CLOCK_Handler_t handlerFrequency = {0};
+CLOCK_Handler_t handlerPllMCO = {0};
+GPIO_Handler_t handlerMCO1Pin = {0};
+
 
 
 
@@ -168,10 +175,32 @@ void parseCommands(char *prtBufferReception){
  * Funcion encargada de la inicializacion de los elementos del sistema
  */
 void InitSystem(void){
-	// Configurando el Timer2 para que funcione con el blinky
+//_----------------------------------------ClockPLL----------------------------------------------------------
+	//--------------PLL-----------------------------------------------
+	// Se configura el pin A8 para que por este salga la frecuencia del reloj principal
+	//Esto es opcional
+	handlerMCO1Pin.pGPIOx = GPIOA;
+	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
+	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
+	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinNumber = PIN_8;
+	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
+	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEED_FAST;
+
+	// Se carga la configuracion del pin A8
+	GPIO_Config(&handlerMCO1Pin);
+
+	// Se configura los parametros para la frecuencia
+	handlerPllMCO.CLOCK_Config.frequency = MCU_FREQUENCY_80MHz;
+	configPll(&handlerPllMCO);
+
+
+//-----------------------------------------StateLed----------------------------------------------------------
+
+
 	handlerStateTimer.ptrTIMx 						= TIM2;
 	handlerStateTimer.TIMx_Config.TIMx_mode			= BTIMER_MODE_UP;
-	handlerStateTimer.TIMx_Config.TIMx_speed		= BTIMER_SPEED_1ms;
+	handlerStateTimer.TIMx_Config.TIMx_speed		= BTIMER_SPEED_1;
 	handlerStateTimer.TIMx_Config.TIMx_period		= 250;
 
 	// Cargamos la configuración del timer
@@ -180,6 +209,9 @@ void InitSystem(void){
 	// Activamos el TIM2
 	starTimer(&handlerStateTimer);
 
+
+
+//--------------------------------------CMD-Comunication------------------------------------------------------
 	// Configurando el pin para el Led_Blinky
 	handlerStateLed.pGPIOx 								= GPIOA;
 	handlerStateLed.GPIO_PinConfig.GPIO_PinNumber		= PIN_5;
@@ -196,7 +228,7 @@ void InitSystem(void){
 
 	/* Configurando los pines sobre los que funciona el USART2 (TX) */
 	handlerPinTx.pGPIOx 							= GPIOA;
-	handlerPinTx.GPIO_PinConfig.GPIO_PinNumber		= PIN_2;
+	handlerPinTx.GPIO_PinConfig.GPIO_PinNumber		= PIN_9;
 	handlerPinTx.GPIO_PinConfig.GPIO_PinMode		= GPIO_MODE_ALTFN;
 	handlerPinTx.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
 	handlerPinTx.GPIO_PinConfig.GPIO_PinSpeed		= GPIO_OSPEED_FAST;
@@ -206,7 +238,7 @@ void InitSystem(void){
 
 	/* Configurando los pines sobre los que funciona el USART2 (RX) */
 	handlerPinRx.pGPIOx 							= GPIOA;
-	handlerPinRx.GPIO_PinConfig.GPIO_PinNumber		= PIN_3;
+	handlerPinRx.GPIO_PinConfig.GPIO_PinNumber		= PIN_10;
 	handlerPinRx.GPIO_PinConfig.GPIO_PinMode		= GPIO_MODE_ALTFN;
 	handlerPinRx.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
 	handlerPinRx.GPIO_PinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
@@ -215,7 +247,7 @@ void InitSystem(void){
 	GPIO_Config(&handlerPinRx);
 
 	// Configurando la comunicación serial (Cable verde es TX, Cable Blanco es RX)
-	handlerUsart2.ptrUSARTx 					= USART2;
+	handlerUsart2.ptrUSARTx 					= USART1;
 	handlerUsart2.USART_Config.USART_baudrate	= USART_BAUDRATE_115200;
 	handlerUsart2.USART_Config.USART_datasize	= USART_DATASIZE_8BIT;
 	handlerUsart2.USART_Config.USART_parity		= USART_PARITY_NONE;
@@ -238,7 +270,7 @@ void BasicTimer2_Callback(void){
  * El puerto es leido en la ISR (para bajar la bandera de la interrupción)
  * El caracter que se lee es devuelto por la función getRxData
  */
-void usart2_Callback(void){
+void usart1_Callback(void){
 	// Leemos el valor del registro DR, donde se almacena el dato que llega.
 	// Esto además debe bajar la bandera de la interrupción
 	rxData = getRxData();
