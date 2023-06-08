@@ -148,15 +148,20 @@ void parseCommands(char *prtBufferReception){
 	else if (strcmp(cmd,"clock")== 0) {
 
 		switch(firstParameter){
+
 		case 1:
-			handlerClockMCO.CLOCK_Config.clock = CLOCK_LSE;
-			typeClock(&handlerClockMCO);
-		case 2:
 			writeMsg(&handlerUsart2, "USTED ESTA AQUI:\n");
 			handlerClockMCO.CLOCK_Config.clock = CLOCK_HSI;
+			handlerClockMCO.CLOCK_Config.prescaler= DIVISION_BY4;
 			writeMsg(&handlerUsart2, "USTED ESTA AQUI seleccionando el mco:\n");
 			typeClock(&handlerClockMCO);
 			writeMsg(&handlerUsart2, "aqui ya cambio la frecuencia:\n");
+
+		case 2:
+
+			handlerClockMCO.CLOCK_Config.clock = CLOCK_LSE;
+			handlerClockMCO.CLOCK_Config.prescaler = DIVISION_BY5;
+			typeClock(&handlerClockMCO);
 		case 3:
 			writeMsg(&handlerUsart2, "USTED ESTA AQUI seleccionando el mco:\n");
 			handlerPllMCO.CLOCK_Config.prescaler = DIVISION_BY4;
@@ -169,18 +174,6 @@ void parseCommands(char *prtBufferReception){
 
 	}
 
-	else if (strcmp(cmd,"stateled")== 0) {
-		handlerStateTimer.TIMx_Config.TIMx_speed		= BTIMER_SPEED_1ms;
-		handlerStateTimer.TIMx_Config.TIMx_period		= 50;
-		// Cargamos la configuración del timer
-		BasicTimer_Config(&handlerStateTimer);
-
-		// Activamos el TIM2
-		starTimer(&handlerStateTimer);
-		writeMsg(&handlerUsart2, "Se prueba con el led de estado aumentado la velocidad");
-
-
-	}
 
 
 }
