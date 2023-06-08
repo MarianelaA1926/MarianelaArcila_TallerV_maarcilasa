@@ -66,6 +66,7 @@ unsigned int secondParameter;
 
 CLOCK_Handler_t handlerFrequency = {0};
 CLOCK_Handler_t handlerPllMCO = {0};
+CLOCK_Handler_t handlerClockMCO = {0};
 GPIO_Handler_t handlerMCO1Pin = {0};
 
 
@@ -133,7 +134,7 @@ void parseCommands(char *prtBufferReception){
 
 		writeMsg(&handlerUsart2, "Help Menu CMDs:\n");
 		writeMsg(&handlerUsart2, "1) help    -- Print this menu\n");
-		writeMsg(&handlerUsart2, "2) dummy #A #B -- dummy cmd, #A and #B are uint32_t\n");
+		writeMsg(&handlerUsart2, "2)  \n");
 		writeMsg(&handlerUsart2, "3) usermsg # # msg -- msg is a string comming from outside\n");
 		writeMsg(&handlerUsart2, "4) initLcd -- simple Test for the LCD\n");
 		writeMsg(&handlerUsart2, "5) testLcd -- simple Test for the LCD\n");
@@ -142,15 +143,30 @@ void parseCommands(char *prtBufferReception){
 	}
 	// El comando dummy sirve para entender como funciona la recepción de números enviados
 	// desde la consola
-	else if (strcmp(cmd,"dummy")== 0) {
-		writeMsg (&handlerUsart2,"CMD: dummy\n" ) ;
-		// Cambiando el formato para presentar el número por el puerto serial
-		sprintf(bufferData,"number A = %u\n",firstParameter);
-		writeMsg(&handlerUsart2, bufferData);
 
-		// Cambiando el formato para presentar el número por el puerto serial
-		sprintf(bufferData,"number B= %u\n", secondParameter) ;
-		writeMsg (&handlerUsart2, bufferData);
+
+	else if (strcmp(cmd,"clock")== 0) {
+
+		switch(firstParameter){
+		case 1:
+			handlerClockMCO.CLOCK_Config.clock = CLOCK_LSE;
+			typeClock(&handlerClockMCO);
+		case 2:
+			writeMsg(&handlerUsart2, "USTED ESTA AQUI:\n");
+			handlerClockMCO.CLOCK_Config.clock = CLOCK_HSI;
+			writeMsg(&handlerUsart2, "USTED ESTA AQUI seleccionando el mco:\n");
+			typeClock(&handlerClockMCO);
+			writeMsg(&handlerUsart2, "aqui ya cambio la frecuencia:\n");
+		case 3:
+			writeMsg(&handlerUsart2, "USTED ESTA AQUI seleccionando el mco:\n");
+			handlerPllMCO.CLOCK_Config.prescaler = DIVISION_BY4;
+			writeMsg(&handlerUsart2, "USTED ESTA AQUI seleccionando el mco:\n");
+			configPll(&handlerPllMCO);
+
+		}
+
+
+
 	}
 
 	else if (strcmp(cmd,"stateled")== 0) {
@@ -193,6 +209,7 @@ void InitSystem(void){
 
 	// Se configura los parametros para la frecuencia
 	handlerPllMCO.CLOCK_Config.frequency = MCU_FREQUENCY_100MHz;
+	handlerPllMCO.CLOCK_Config.prescaler = DIVISION_BY2 ;
 	frequencyClock(&handlerPllMCO);
 	configPll(&handlerPllMCO);
 
