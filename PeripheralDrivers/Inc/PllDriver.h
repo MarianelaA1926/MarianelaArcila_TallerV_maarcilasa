@@ -22,9 +22,7 @@
 #define MCU_FREQUENCY_80MHz  	0
 #define MCU_FREQUENCY_100MHz  	1
 
-#define PLL_CLOCK 				0
-#define HSI_CLOCK				1
-#define LSE_CLOCK				2
+
 
 
 #define MCO1 1
@@ -46,7 +44,7 @@ typedef struct{
 
 void configPll(CLOCK_Handler_t * prtPLL);
 
+void frequencyClock(CLOCK_Handler_t * ptrClock);
 
 
-void configMCO( CLOCK_Handler_t * ptrClock);
 #endif /* PLLDRIVER_H_ */

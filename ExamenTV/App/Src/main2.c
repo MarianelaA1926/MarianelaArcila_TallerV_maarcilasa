@@ -176,6 +176,7 @@ void parseCommands(char *prtBufferReception){
  */
 void InitSystem(void){
 //_----------------------------------------ClockPLL----------------------------------------------------------
+
 	//--------------PLL-----------------------------------------------
 	// Se configura el pin A8 para que por este salga la frecuencia del reloj principal
 	//Esto es opcional
@@ -191,8 +192,10 @@ void InitSystem(void){
 	GPIO_Config(&handlerMCO1Pin);
 
 	// Se configura los parametros para la frecuencia
-	handlerPllMCO.CLOCK_Config.frequency = MCU_FREQUENCY_80MHz;
+	handlerPllMCO.CLOCK_Config.frequency = MCU_FREQUENCY_100MHz;
+	frequencyClock(&handlerPllMCO);
 	configPll(&handlerPllMCO);
+
 
 
 //-----------------------------------------StateLed----------------------------------------------------------
@@ -200,7 +203,7 @@ void InitSystem(void){
 
 	handlerStateTimer.ptrTIMx 						= TIM2;
 	handlerStateTimer.TIMx_Config.TIMx_mode			= BTIMER_MODE_UP;
-	handlerStateTimer.TIMx_Config.TIMx_speed		= BTIMER_SPEED_1;
+	handlerStateTimer.TIMx_Config.TIMx_speed		= BTIMER_80SPEED_1ms;
 	handlerStateTimer.TIMx_Config.TIMx_period		= 250;
 
 	// Cargamos la configuración del timer
@@ -248,6 +251,7 @@ void InitSystem(void){
 
 	// Configurando la comunicación serial (Cable verde es TX, Cable Blanco es RX)
 	handlerUsart2.ptrUSARTx 					= USART1;
+	handlerUsart2.USART_Config.MCU_frecuency 	= USART_MCU_FREQUENCY_100MHz;
 	handlerUsart2.USART_Config.USART_baudrate	= USART_BAUDRATE_115200;
 	handlerUsart2.USART_Config.USART_datasize	= USART_DATASIZE_8BIT;
 	handlerUsart2.USART_Config.USART_parity		= USART_PARITY_NONE;

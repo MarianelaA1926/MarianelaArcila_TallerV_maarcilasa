@@ -44,6 +44,7 @@
 
 #define USART_MCU_FREQUENCY_16MHz 0
 #define USART_MCU_FREQUENCY_80MHz 1
+#define USART_MCU_FREQUENCY_100MHz 2
 
 /* Structure for communication configuration:
    Baudrate

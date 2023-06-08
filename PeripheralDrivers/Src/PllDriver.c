@@ -7,121 +7,103 @@
  *  This control aims to be as generic as possible.
  */
 #include <stm32f4xx.h>
-#include  "PllDriver.h"
+#include "PllDriver.h"
 
 /* First, we need to configure the RCC (Reset and Clock Control) register.
  * so, we activate the PWR (Power Control) peripheral for proper control of the
  * energy in the PLL.
  */
 
-void configMCO( CLOCK_Handler_t * ptrClock){
+void frequencyClock(CLOCK_Handler_t *ptrClock) {
 
-	switch(ptrClock -> CLOCK_Config.clock){
-	//Se configura el MCO para el PLL
-	case PLL_CLOCK:
-		/*We configure the prescaler in the MC01 output, We divide the prescaler in 5*/
-		RCC->CFGR |= (RCC_CFGR_MCO1PRE_Msk);
+    /* Now we configure the frequency of the MCU. We establish three important values:
+     * PLLN as 80, PLLM as 4. Then we calculate VCO as 16MHz * (80/4) = 320,
+     * and calculate PLLP as 80MHz / VCO = 4."*/
 
-		/*We activate the output MC01*/
-		RCC->CFGR |=  RCC_CFGR_MCO1;
-		break;
-	case HSI_CLOCK:
-		/*We configure the prescaler in the MC01 output, We divide the prescaler in 5*/
-		RCC->CFGR |= (RCC_CFGR_MCO1PRE_Msk);
-		/*We activate the output MC01*/
-		RCC->CFGR |=  (0b00 <<  RCC_CFGR_MCO1_Pos);
-		break;
+    switch (ptrClock->CLOCK_Config.frequency) {
 
-	case LSE_CLOCK:
-		/*We configure the prescaler in the MC01 output, We divide the prescaler in 5*/
-		RCC->CFGR |= (RCC_CFGR_MCO1PRE_Msk);
-		/*We activate the output MC01*/
-		RCC->CFGR |=  (0b01 <<  RCC_CFGR_MCO1_Pos);
-		break;
-	}
+        case MCU_FREQUENCY_80MHz:
+
+            // PLLP Register
+            RCC->PLLCFGR &= ~(0b11 << RCC_PLLCFGR_PLLP_Pos);
+            RCC->PLLCFGR |= (0b01 << RCC_PLLCFGR_PLLP_Pos);
+
+            // PLLN Register
+            RCC->PLLCFGR &= ~(0b111111111 << RCC_PLLCFGR_PLLN_Pos);
+            RCC->PLLCFGR |= (0x1010000 << RCC_PLLCFGR_PLLN_Pos); // Use hexadecimal value for PLLN (80 in decimal)
+
+            // PLLM Register
+            RCC->PLLCFGR &= ~(0b111111 << RCC_PLLCFGR_PLLM_Pos);
+            RCC->PLLCFGR |= (4 << RCC_PLLCFGR_PLLM_Pos);
+            break;
+
+        case MCU_FREQUENCY_100MHz:
+
+            //
+            // PLLP Register
+			RCC->PLLCFGR &= ~(0b11 << RCC_PLLCFGR_PLLP_Pos);
+			RCC->PLLCFGR |= (0b00 << RCC_PLLCFGR_PLLP_Pos);
+
+			// PLLN Register
+			RCC->PLLCFGR &= ~(0b111111111 << RCC_PLLCFGR_PLLN_Pos);
+			RCC->PLLCFGR |= (0b001100100<< RCC_PLLCFGR_PLLN_Pos); // Use hexadecimal value for PLLN (80 in decimal)
+				 // PLLM Register
+			RCC->PLLCFGR &= ~(0b111111 << RCC_PLLCFGR_PLLM_Pos);
+			RCC->PLLCFGR |= (8 << RCC_PLLCFGR_PLLM_Pos);
+			break;
+    }
 }
 
+void configPll(CLOCK_Handler_t *ptrClock) {
+    RCC->APB1ENR |= RCC_APB1ENR_PWREN; // Enable PWR clock signal
 
-void configPll(CLOCK_Handler_t * prtPLL){
+    /* 1) We configure the regulator voltage scaling output.
+     * This register controls the internal voltage. In this case,
+     * since we need a frequency of 80MHz, we use the Scale 2 mode.
+     */
+    if(ptrClock -> CLOCK_Config.frequency ==MCU_FREQUENCY_80MHz){
+    	PWR->CR &= ~(0b11 << PWR_CR_VOS_Pos);
+    	PWR->CR |= (0b10 << PWR_CR_VOS_Pos);
+    }
+    else{
+    	PWR->CR &= ~(0b11 << PWR_CR_VOS_Pos);
+    	PWR -> CR |= (0b11<<PWR_CR_VOS_Pos);
+    }
 
-	RCC  -> APB1ENR |= RCC_APB1ENR_PWREN; //PWR clock signal
-
-	/* 1) We configure the regulator voltage scaling output.
-	 * This register controls the internal voltage. In this case,
-	 * since we need a frequency of 80MHz, we use the Scale 2 mode.
-	 */
-	if(prtPLL->CLOCK_Config.frequency == MCU_FREQUENCY_80MHz){
-		PWR -> CR |= (0b10<<PWR_CR_VOS_Pos);
-	}
-	else if (prtPLL->CLOCK_Config.frequency  == MCU_FREQUENCY_100MHz){
-		PWR -> CR |= (0b11<<PWR_CR_VOS_Pos);
-	}
-
-
-	/* 2) We configure the latency with the wait states in the Flash Memory.
-	 *    This is done in the ACR register, where the wait states are set to
-	 *    ensure proper functioning of the memory.  (3.4.1 MR)
-	 *    In this particular case, we use the MOS in scale to. As a result,
-	 *    the wait states are set to 2 for the HCLK voltage between 2.7V and 3.6V.
-	 *
-	 */
-	if(prtPLL->CLOCK_Config.frequency  == MCU_FREQUENCY_80MHz){
-		FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
-	}
-	else if(prtPLL->CLOCK_Config.frequency == MCU_FREQUENCY_100MHz){
-		FLASH->ACR |= FLASH_ACR_LATENCY_3WS;
-	}
+    /* 2) We configure the latency with the wait states in the Flash Memory.
+     *    This is done in the ACR register, where the wait states are set to
+     *    ensure proper functioning of the memory. (3.4.1 MR)
+     *    In this particular case, we use the MOS in scale to. As a result,
+     *    the wait states are set to 2 for the HCLK voltage between 2.7V and 3.6V.
+     */
+    if(ptrClock -> CLOCK_Config.frequency ==MCU_FREQUENCY_80MHz){
+    	FLASH->ACR |= FLASH_ACR_LATENCY_2WS;
+    }
+    else{
+    	FLASH->ACR |= FLASH_ACR_LATENCY_3WS;
+    }
 
 
-	/*3) We activate the PLL clock signal in the CR register to the RCC_PLLON
-	 * and wait for the clock to stabilize
-	 */
-	RCC->CR |= RCC_CR_PLLON;
-	while(! (RCC->CR & RCC_CR_PLLRDY ));
+    /* 3) We activate the PLL clock signal in the CR register to RCC_PLLON
+     *    and wait for the clock to stabilize.
+     */
+    RCC->CR |= RCC_CR_PLLON;
+    while (!(RCC->CR & RCC_CR_PLLRDY));
 
-	/*4)We activate the PLL clock in the CFGR register SW  (SYSCLK)*/
+    /* 4) We activate the PLL clock in the CFGR register SW (SYSCLK). */
+    RCC->CFGR |= RCC_CFGR_SW_PLL;
+    while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL);
 
-	RCC -> CFGR |= RCC_CFGR_SW_1;
-	while( !(RCC->CFGR & RCC_CFGR_SW_1));
+    /* We clear the prescaler in the CFGR-> HPRE register AHB. */
+    RCC->CFGR &= ~(RCC_CFGR_HPRE);
 
-	/*We clear the preescaler in the CFGR-> HPRE register AHB*/
-	RCC -> CFGR &= ~(RCC_CFGR_HPRE);
+    /* We configure the MCO pin. */
+    /* We configure the prescaler in the MC01 output, dividing the prescaler by 5. */
+    RCC->CFGR |= (0b111 <<  RCC_CFGR_MCO1PRE_Pos  );
 
-	configMCO(PLL_CLOCK);
+    /* We activate the output MC01. */
+    RCC->CFGR |= RCC_CFGR_MCO1;
 
-	/*we configure the prescaler APB1*/
-	RCC->CFGR |= RCC_CFGR_PPRE1_DIV16;
-
-
-	/* Now we configure the frequency of the MCU. We establish three important values:
-	 * PLLN as 80, PLLM as 4. Then we calculate VCO as 16MHz * (80/4) = 320,
-	 * and calculate PLLP as 80MHz / VCO = 4."*/
-
-	switch(prtPLL->CLOCK_Config.frequency ){
-
-	case MCU_FREQUENCY_80MHz:
-
-	//PLLP Register
-		RCC->PLLCFGR &= ~(0b11<<RCC_PLLCFGR_PLLP_Pos);
-		RCC->PLLCFGR |= (0b01<<RCC_PLLCFGR_PLLP_Pos );
-		//PLPN Register
-		RCC->PLLCFGR &= ~(0b111111111 << RCC_PLLCFGR_PLLN_Pos);
-		// We clear the register
-		RCC->PLLCFGR |= (0b1010000 << RCC_PLLCFGR_PLLN_Pos);
-
-		//PLLM Register
-		RCC->PLLCFGR &= ~(0b111111 << RCC_PLLCFGR_PLLM_Pos);
-		//We clear the register
-		RCC->PLLCFGR |= (4<< RCC_PLLCFGR_PLLM_Pos);
-		break;
-
-	case MCU_FREQUENCY_100MHz:
-		break;
-	}
-
-
-
+    /* We configure the prescaler APB1. */
+    RCC->CFGR |= RCC_CFGR_PPRE1_DIV16;
 }
-
-
-

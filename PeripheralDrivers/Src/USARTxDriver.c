@@ -166,7 +166,7 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 	// 2.5 Baudrate Configuration (USART_BRR )
 	//We configure the frecuency of the Micro MCU_frecuency
 	switch (ptrUsartHandler-> USART_Config.MCU_frecuency ){
-	case USART_MCU_FREQUENCY_16MHz:{
+	case USART_MCU_FREQUENCY_16MHz:
 
 		// See value table (Table 73), Freq = 16MHz, overr = 0;
 		if (ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_9600) {
@@ -195,8 +195,8 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		}
 
 		break;
-	}
-	case USART_MCU_FREQUENCY_80MHz:{
+
+	case USART_MCU_FREQUENCY_80MHz:
 
 
 
@@ -209,7 +209,27 @@ void USART_Config(USART_Handler_t *ptrUsartHandler){
 		}
 
 		break;
-	}
+	case USART_MCU_FREQUENCY_100MHz:
+		if(ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_115200){
+			/* The value to load is 54.2534722 -> Mantissa = 54 , fraction 0.2534722
+			 * Mantissa = 54 -> 0x02B;    fraction 16*0.2534722 = 4,055555555 aprx 4
+			 * Value to load: 0x0364
+			 */
+			ptrUsartHandler->ptrUSARTx->BRR = 0x0364;
+
+		}
+		else if (ptrUsartHandler->USART_Config.USART_baudrate == USART_BAUDRATE_9600) {
+			/* The value to load is 651,041-> Mantissa = 651, fraction = 0.041 aprx 0
+			 * Mantissa = 651 = 0x28B, fraction = 16 * 0 = 0
+			 * Value to load: 0x028B0
+			 * Configuring the Baudrate generator for a speed of 9600bps
+			 */
+			ptrUsartHandler->ptrUSARTx->BRR = 0x028B0;
+		}
+
+
+
+
 	}
 
 

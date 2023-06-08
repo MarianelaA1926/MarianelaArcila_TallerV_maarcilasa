@@ -35,8 +35,8 @@ BasicTimer_Handler_t handlerStateTimer = {0};
 USART_Handler_t handlerUsart2 = {0};
 
 //Cambiamos la frecuencia del miro
-PLL_Handler_t handlerFrequency = {0};
-PLL_Handler_t handlerPll = {0};
+CLOCK_Handler_t handlerFrequency = {0};
+CLOCK_Handler_t handlerPllMCO = {0};
 GPIO_Handler_t handlerMCO1Pin = {0};
 
 uint8_t txData = 0;
@@ -82,7 +82,7 @@ void InitSystem(void){
 	//--------------PLL-----------------------------------------------
 	// Se configura el pin A8 para que por este salga la frecuencia del reloj principal
 	//Esto es opcional
-	/*handlerMCO1Pin.pGPIOx = GPIOA;
+	handlerMCO1Pin.pGPIOx = GPIOA;
 	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinAltFunMode = AF0;
 	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_ALTFN;
 	handlerMCO1Pin.GPIO_PinConfig.GPIO_PinNumber = PIN_8;
@@ -94,13 +94,13 @@ void InitSystem(void){
 	GPIO_Config(&handlerMCO1Pin);
 
 	// Se configura los parametros para la frecuencia
-	handlerFrequency. PLL_Config.frequency = MCU_FREQUENCY_80MHz;
+	handlerPllMCO.CLOCK_Config.frequency = MCU_FREQUENCY_80MHz;
+	frequencyClock(&handlerPllMCO);
+	configPll(&handlerPllMCO);
 
 
-	// se carga la configuracion de los parametros de la nueva frecuencia
 
-	frequency(&handlerPll);
-	//configPll(&handlerPll);*/
+
 //__________________________________________________________________________
 
 
