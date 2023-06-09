@@ -100,9 +100,12 @@ void configPll(CLOCK_Handler_t *ptrClock) {
     /* We configure the MCO pin. */
     /* We configure the prescaler in the MC01 output, dividing the prescaler by 5. */
     //RCC->CFGR |= (0b111 <<  RCC_CFGR_MCO1PRE_Pos  );
+
     prescalerClock(ptrClock);
 
     /* We activate the output MC01. */
+    // We clear de register
+    RCC->CFGR &= ~(0b11 << RCC_CFGR_MCO1_Pos );
     RCC->CFGR |= RCC_CFGR_MCO1;
 
     /* We configure the prescaler APB1. */
@@ -122,6 +125,8 @@ void typeClock(CLOCK_Handler_t *ptrClock){
 		RCC->CFGR &= ~(0b11 << RCC_CFGR_MCO1_Pos );
 		//We select de
 		RCC->CFGR |= (0b10 << RCC_CFGR_MCO1_Pos );
+
+
 	}
 
 }
@@ -129,26 +134,36 @@ void typeClock(CLOCK_Handler_t *ptrClock){
 void prescalerClock(CLOCK_Handler_t *ptrClock){
 
 	if( ptrClock -> CLOCK_Config.prescaler == NO_DIVISION ){
-		/* We configure the prescaler in the MC01 output, dividing the prescaler by 5. */
-		RCC->CFGR |= (0x0UL <<  RCC_CFGR_MCO1PRE_Pos);
+		/* We configure the prescaler in the MC01 output, dividing the prescaler by 0. */
+		//We clear de register
+
+
+		RCC->CFGR &= ~(0b111 <<  RCC_CFGR_MCO1PRE_Pos);
 	}
 	else if( ptrClock -> CLOCK_Config.prescaler == DIVISION_BY2 ){
-		/* We configure the prescaler in the MC01 output, dividing the prescaler by 5. */
-		RCC->CFGR |=  RCC_CFGR_MCO1PRE_2;
+		//We clear de register
+		RCC->CFGR &= ~(0b111 <<  RCC_CFGR_MCO1PRE_Pos);
+		/* We configure the prescaler in the MC01 output, dividing the prescaler by 2. */
+		RCC->CFGR |= (0b100 <<  RCC_CFGR_MCO1PRE_Pos);
 	}
 	else if( ptrClock -> CLOCK_Config.prescaler == DIVISION_BY3){
-		/* We configure the prescaler in the MC01 output, dividing the prescaler by 5. */
-		RCC->CFGR |= (0x5UL <<  RCC_CFGR_MCO1PRE_Pos  );
+		//We clear de register
+		RCC->CFGR &= ~(0b111 <<  RCC_CFGR_MCO1PRE_Pos);
+		/* We configure the prescaler in the MC01 output, dividing the prescaler by 3. */
+		RCC->CFGR |= (0b101 <<  RCC_CFGR_MCO1PRE_Pos);
 	}
 	else if( ptrClock -> CLOCK_Config.prescaler == DIVISION_BY4 ){
-		/* We configure the prescaler in the MC01 output, dividing the prescaler by 5. */
-		RCC->CFGR |= (0x6UL <<  RCC_CFGR_MCO1PRE_Pos  );
+		//We clear de register
+		RCC->CFGR &= ~(0b111 <<  RCC_CFGR_MCO1PRE_Pos);
+		/* We configure the prescaler in the MC01 output, dividing the prescaler by 4. */
+		RCC->CFGR |= (0b110 <<  RCC_CFGR_MCO1PRE_Pos);
 	}
 	else if( ptrClock -> CLOCK_Config.prescaler == DIVISION_BY5 ){
+		//We clear de register
+		RCC->CFGR &= ~(0b111 <<  RCC_CFGR_MCO1PRE_Pos);
 		/* We configure the prescaler in the MC01 output, dividing the prescaler by 5. */
-		RCC->CFGR |=  RCC_CFGR_MCO1PRE;
+		RCC->CFGR |=  (0b111 <<  RCC_CFGR_MCO1PRE_Pos);
 	}
-
 }
 
 

@@ -67,6 +67,7 @@ unsigned int secondParameter;
 CLOCK_Handler_t handlerFrequency = {0};
 CLOCK_Handler_t handlerPllMCO = {0};
 CLOCK_Handler_t handlerClockMCO = {0};
+
 GPIO_Handler_t handlerMCO1Pin = {0};
 
 
@@ -75,6 +76,9 @@ GPIO_Handler_t handlerMCO1Pin = {0};
 /* Definición de prototipos de funciones */
 void InitSystem(void);
 void parseCommands(char *prtBufferReception);
+
+
+void prescalerCommands(void);
 /**
  * Funcion principal del programa.
  * Esta funcion es el corazón del programa!!
@@ -82,7 +86,7 @@ void parseCommands(char *prtBufferReception);
  * */
 int main(void) {
 
-	// Inicializamos todos los elementos del sistema
+	// Inicializamos todos los elementos del sistema en una configuracion prestablecida
 	InitSystem();
 
 	/* Loop forever */
@@ -132,9 +136,10 @@ void parseCommands(char *prtBufferReception){
 	// Este primer comando imprime una lista con los otros comandos que tiene el equipo
 	if(strcmp(cmd, "help") == 0){
 
-		writeMsg(&handlerUsart2, "Help Menu CMDs:\n");
+
 		writeMsg(&handlerUsart2, "1) help    -- Print this menu\n");
-		writeMsg(&handlerUsart2, "2)  \n");
+		writeMsg(&handlerUsart2, "2) Clock --- Selecciona el tipo de reloj que se quiere utiliza,"
+				"Seleccione 1 para el reloj HSI, 2 para el reloj LSE y 3 para el PLL \n");
 		writeMsg(&handlerUsart2, "3) usermsg # # msg -- msg is a string comming from outside\n");
 		writeMsg(&handlerUsart2, "4) initLcd -- simple Test for the LCD\n");
 		writeMsg(&handlerUsart2, "5) testLcd -- simple Test for the LCD\n");
@@ -150,24 +155,30 @@ void parseCommands(char *prtBufferReception){
 		switch(firstParameter){
 
 		case 1:
-			writeMsg(&handlerUsart2, "USTED ESTA AQUI:\n");
+
+			//Se establece la configuracuin como reloj HSI
 			handlerClockMCO.CLOCK_Config.clock = CLOCK_HSI;
-			handlerClockMCO.CLOCK_Config.prescaler= DIVISION_BY4;
-			writeMsg(&handlerUsart2, "USTED ESTA AQUI seleccionando el mco:\n");
+			prescalerCommands();
 			typeClock(&handlerClockMCO);
-			writeMsg(&handlerUsart2, "aqui ya cambio la frecuencia:\n");
+			writeMsg(&handlerUsart2, "estoy aqui\n");
+
+			break;
 
 		case 2:
 
 			handlerClockMCO.CLOCK_Config.clock = CLOCK_LSE;
-			handlerClockMCO.CLOCK_Config.prescaler = DIVISION_BY5;
 			typeClock(&handlerClockMCO);
-		case 3:
-			writeMsg(&handlerUsart2, "USTED ESTA AQUI seleccionando el mco:\n");
-			handlerPllMCO.CLOCK_Config.prescaler = DIVISION_BY4;
-			writeMsg(&handlerUsart2, "USTED ESTA AQUI seleccionando el mco:\n");
-			configPll(&handlerPllMCO);
+			prescalerCommands();
+			break;
 
+		case 3:
+			prescalerCommands();
+			configPll(&handlerPllMCO);
+			break;
+
+	    default:
+	        // Valor inválido, no hacer nada o mostrar un mensaje de error
+	        return;
 		}
 
 
@@ -178,6 +189,42 @@ void parseCommands(char *prtBufferReception){
 
 }
 
+
+void prescalerCommands(void){
+
+	switch(secondParameter){
+	case 0:
+		handlerClockMCO.CLOCK_Config.prescaler= NO_DIVISION;
+		prescalerClock(&handlerClockMCO);
+		break;
+
+	case 2:
+		handlerClockMCO.CLOCK_Config.prescaler= DIVISION_BY2;
+		prescalerClock(&handlerClockMCO);
+		break;
+
+	case 3:
+
+		handlerClockMCO.CLOCK_Config.prescaler= DIVISION_BY3;
+		prescalerClock(&handlerClockMCO);
+		break;
+
+	case 4:
+		handlerClockMCO.CLOCK_Config.prescaler= DIVISION_BY4;
+		prescalerClock(&handlerClockMCO);
+		break;
+
+	case 5:
+		handlerClockMCO.CLOCK_Config.prescaler= DIVISION_BY5;
+		prescalerClock(&handlerClockMCO);
+		break;
+
+    default:
+        // Valor inválido, no hacer nada o mostrar un mensaje de error
+        return;
+	}
+
+}
 
 
 /*
@@ -202,7 +249,7 @@ void InitSystem(void){
 
 	// Se configura los parametros para la frecuencia
 	handlerPllMCO.CLOCK_Config.frequency = MCU_FREQUENCY_100MHz;
-	handlerPllMCO.CLOCK_Config.prescaler = DIVISION_BY2 ;
+	//handlerPllMCO.CLOCK_Config.prescaler = DIVISION_BY2 ;
 	frequencyClock(&handlerPllMCO);
 	configPll(&handlerPllMCO);
 
