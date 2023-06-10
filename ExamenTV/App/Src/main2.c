@@ -138,7 +138,7 @@ void parseCommands(char *prtBufferReception){
 
 
 		writeMsg(&handlerUsart2, "1) help    -- Print this menu\n");
-		writeMsg(&handlerUsart2, "2) Clock --- Selecciona el tipo de reloj que se quiere utiliza,"
+		writeMsg(&handlerUsart2, "2) Clock --- Seleccion el tipo de reloj que se quiere utiliza,"
 				"Seleccione 1 para el reloj HSI, 2 para el reloj LSE y 3 para el PLL \n");
 		writeMsg(&handlerUsart2, "3) usermsg # # msg -- msg is a string comming from outside\n");
 		writeMsg(&handlerUsart2, "4) initLcd -- simple Test for the LCD\n");
@@ -173,6 +173,7 @@ void parseCommands(char *prtBufferReception){
 
 		case 3:
 			prescalerCommands();
+			writeMsg(&handlerUsart2, "estoy aqui\n");
 			configPll(&handlerPllMCO);
 			break;
 
@@ -249,7 +250,7 @@ void InitSystem(void){
 
 	// Se configura los parametros para la frecuencia
 	handlerPllMCO.CLOCK_Config.frequency = MCU_FREQUENCY_100MHz;
-	//handlerPllMCO.CLOCK_Config.prescaler = DIVISION_BY2 ;
+
 	frequencyClock(&handlerPllMCO);
 	configPll(&handlerPllMCO);
 

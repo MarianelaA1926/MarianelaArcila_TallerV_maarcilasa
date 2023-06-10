@@ -101,7 +101,7 @@ void configPll(CLOCK_Handler_t *ptrClock) {
     /* We configure the prescaler in the MC01 output, dividing the prescaler by 5. */
     //RCC->CFGR |= (0b111 <<  RCC_CFGR_MCO1PRE_Pos  );
 
-    prescalerClock(ptrClock);
+    //prescalerClock(ptrClock);
 
     /* We activate the output MC01. */
     // We clear de register
@@ -128,6 +128,7 @@ void typeClock(CLOCK_Handler_t *ptrClock){
 
 
 	}
+
 
 }
 
