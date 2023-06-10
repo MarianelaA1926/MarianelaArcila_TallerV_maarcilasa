@@ -14,7 +14,7 @@
  * energy in the PLL.
  */
 
-void frequencyClock(CLOCK_Handler_t *ptrClock) {
+void frequencyPLLClock(CLOCK_Handler_t *ptrClock) {
 
     /* Now we configure the frequency of the MCU. We establish three important values:
      * PLLN as 80, PLLM as 4. Then we calculate VCO as 16MHz * (80/4) = 320,
@@ -39,7 +39,7 @@ void frequencyClock(CLOCK_Handler_t *ptrClock) {
 
         case MCU_FREQUENCY_100MHz:
 
-            //
+
             // PLLP Register
 			RCC->PLLCFGR &= ~(0b11 << RCC_PLLCFGR_PLLP_Pos);
 			RCC->PLLCFGR |= (0b00 << RCC_PLLCFGR_PLLP_Pos);
@@ -121,10 +121,33 @@ void typeClock(CLOCK_Handler_t *ptrClock){
 
 	}
 	else if (ptrClock -> CLOCK_Config.clock == CLOCK_LSE ){
+
+
+	    // Habilitar el acceso al dominio de respaldo
+	    RCC->APB1ENR |= RCC_APB1ENR_PWREN;
+	    PWR->CR |= PWR_CR_DBP;
+	    PWR->CSR |= PWR_CSR_BRE;
+
+	    // Configurar el LSEON para encender el oscilador LSE
+	    RCC->BDCR |= RCC_BDCR_LSEON;
+
+	    // Esperar hasta que el oscilador LSE esté listo
+	    while (!(RCC->BDCR & RCC_BDCR_LSERDY));
+
+	    // Seleccionar el LSE como fuente para el RTC
+	    RCC->BDCR |= (0b01 << RCC_BDCR_RTCSEL_Pos);
+
+	    // Encender el RTC
+	    RCC->BDCR |= RCC_BDCR_RTCEN;
+
+	    // Esperar a que los registros del RTC se sincronicen
+	    while (!(RTC->ISR & RTC_ISR_RSF));
+
+
 		//We clear de register
 		RCC->CFGR &= ~(0b11 << RCC_CFGR_MCO1_Pos );
-		//We select de
-		RCC->CFGR |= (0b10 << RCC_CFGR_MCO1_Pos );
+			//We select de MCO
+		RCC->CFGR |= (0b01 << RCC_CFGR_MCO1_Pos );
 
 
 	}

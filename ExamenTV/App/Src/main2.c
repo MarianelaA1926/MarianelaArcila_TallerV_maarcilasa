@@ -167,8 +167,9 @@ void parseCommands(char *prtBufferReception){
 		case 2:
 
 			handlerClockMCO.CLOCK_Config.clock = CLOCK_LSE;
-			typeClock(&handlerClockMCO);
 			prescalerCommands();
+			typeClock(&handlerClockMCO);
+
 			break;
 
 		case 3:
@@ -251,7 +252,7 @@ void InitSystem(void){
 	// Se configura los parametros para la frecuencia
 	handlerPllMCO.CLOCK_Config.frequency = MCU_FREQUENCY_100MHz;
 
-	frequencyClock(&handlerPllMCO);
+	frequencyPLLClock(&handlerPllMCO);
 	configPll(&handlerPllMCO);
 
 

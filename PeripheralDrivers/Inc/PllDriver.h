@@ -31,7 +31,7 @@
 #define DIVISION_BY5		4
 
 
-
+#define NOP()  asm("NOP")
 #define MCO1 1
 
 typedef struct{
@@ -50,7 +50,7 @@ typedef struct{
 
 void configPll(CLOCK_Handler_t * prtPLL);
 
-void frequencyClock(CLOCK_Handler_t * ptrClock);
+void frequencyPLLClock(CLOCK_Handler_t * ptrClock);
 void typeClock(CLOCK_Handler_t *ptrClock);
 void prescalerClock(CLOCK_Handler_t *ptrClock);
 
