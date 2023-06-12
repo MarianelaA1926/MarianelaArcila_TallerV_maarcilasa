@@ -120,33 +120,38 @@ void typeClock(CLOCK_Handler_t *ptrClock){
 
 
 	}
+
 	else if (ptrClock -> CLOCK_Config.clock == CLOCK_LSE ){
 
 
-	    // Habilitar el acceso al dominio de respaldo
+	    // We activate the clock signal of the Power Control
 	    RCC->APB1ENR |= RCC_APB1ENR_PWREN;
+
+	    //Disable backup domain write protection
 	    PWR->CR |= PWR_CR_DBP;
+
+	    //We enable the backup regulator.
 	    PWR->CSR |= PWR_CSR_BRE;
 
-	    // Configurar el LSEON para encender el oscilador LSE
+	    // External low-speed oscillator enable
 	    RCC->BDCR |= RCC_BDCR_LSEON;
 
-	    // Esperar hasta que el oscilador LSE esté listo
+	    // We wait until the LSE oscillator is ready.
 	    while (!(RCC->BDCR & RCC_BDCR_LSERDY));
 
-	    // Seleccionar el LSE como fuente para el RTC
+	    // Select the LSE as the source for the RTC (Real-Time Clock).
 	    RCC->BDCR |= (0b01 << RCC_BDCR_RTCSEL_Pos);
 
-	    // Encender el RTC
+	    // Power on the RTC (Real-Time Clock).
 	    RCC->BDCR |= RCC_BDCR_RTCEN;
 
-	    // Esperar a que los registros del RTC se sincronicen
+	    // Wait for the RTC registers to synchronize.
 	    while (!(RTC->ISR & RTC_ISR_RSF));
 
 
 		//We clear de register
 		RCC->CFGR &= ~(0b11 << RCC_CFGR_MCO1_Pos );
-			//We select de MCO
+		//We select de MCO
 		RCC->CFGR |= (0b01 << RCC_CFGR_MCO1_Pos );
 
 
@@ -158,9 +163,8 @@ void typeClock(CLOCK_Handler_t *ptrClock){
 void prescalerClock(CLOCK_Handler_t *ptrClock){
 
 	if( ptrClock -> CLOCK_Config.prescaler == NO_DIVISION ){
-		/* We configure the prescaler in the MC01 output, dividing the prescaler by 0. */
-		//We clear de register
 
+		/* We configure the prescaler in the MC01 output, dividing the prescaler by 0. */
 
 		RCC->CFGR &= ~(0b111 <<  RCC_CFGR_MCO1PRE_Pos);
 	}

@@ -37,6 +37,12 @@
 #include "BasicTimer.h"
 #include "USARTxDriver.h"
 #include "PllDriver.h"
+#include "RtcDriver.h"
+#include "AdcDriver.h"
+
+
+
+
 
 // Definicion de los handlers necesarios
 GPIO_Handler_t handlerStateLed = {0};
@@ -46,8 +52,15 @@ GPIO_Handler_t handlerPinRx		= {0};
 // Timer encargado del Blinky
 BasicTimer_Handler_t handlerStateTimer = {0};
 
-// Utiliza la conexion USB
-USART_Handler_t handlerUsart2 = {0};
+// Utilizar USART 1
+USART_Handler_t handlerUsart1 = {0};
+
+// RTC para la fecha y hora
+handlerRTC_t handlerFechaActual = {0};
+
+
+
+
 
 uint8_t rxData = 0;
 char bufferData[64];
@@ -70,7 +83,9 @@ CLOCK_Handler_t handlerClockMCO = {0};
 
 GPIO_Handler_t handlerMCO1Pin = {0};
 
+//ADC
 
+ADC_Config_t adcConfigChanels = {0};
 
 
 /* Definición de prototipos de funciones */
@@ -87,6 +102,7 @@ void prescalerCommands(void);
 int main(void) {
 
 	// Inicializamos todos los elementos del sistema en una configuracion prestablecida
+	// Como reloj del sistema se establece el PLL por defecto a una frecuencia de 100MHz
 	InitSystem();
 
 	/* Loop forever */
@@ -137,49 +153,91 @@ void parseCommands(char *prtBufferReception){
 	if(strcmp(cmd, "help") == 0){
 
 
-		writeMsg(&handlerUsart2, "1) help    -- Print this menu\n");
-		writeMsg(&handlerUsart2, "2) Clock --- Seleccion el tipo de reloj que se quiere utiliza,"
-				"Seleccione 1 para el reloj HSI, 2 para el reloj LSE y 3 para el PLL \n");
-		writeMsg(&handlerUsart2, "3) usermsg # # msg -- msg is a string comming from outside\n");
-		writeMsg(&handlerUsart2, "4) initLcd -- simple Test for the LCD\n");
-		writeMsg(&handlerUsart2, "5) testLcd -- simple Test for the LCD\n");
-		writeMsg(&handlerUsart2, "6) setPeriod  -- Change the Led_state period (us)\n");
-		writeMsg(&handlerUsart2, "7) autoUpdate # -- Automatic LCD update (# -> 1/0\n)");
+		writeMsg(&handlerUsart1, "1) help    -- Menu de Funciones:\n"
+									"Para ativar alguna de las funciones escriba la palabra clave,\n seguida del numero de configuracion \n"
+									"finalice con el caracter '@' \n");
+
+		writeMsg(&handlerUsart1, "                                                                                                            "
+				"                                                                                                                              \n");
+
+		writeMsg(&handlerUsart1, "2) prescaler --- Seleccione el prescaler con el cual quiere obtener su señal en el MCO\n"
+									 "Marque 0 para obtener la señal sin prescaler\n"
+									 "Marque 2 si desea una division por 2 \n"
+									 "Marque 3 si desea una division por 3\n"
+									 "Marque 4 si desea una division por 4\n"
+									 "Marque 5 si deses una division por 5\n");
+
+		writeMsg(&handlerUsart1, "                                                                                                            "
+					"                                                                                                                              \n");
+
+
+		writeMsg(&handlerUsart1, "3) Clock --- Seleccione el tipo de reloj que desea utilizar en el MCO\n"
+									"Marque 1 para seleccionar el reloj HSI a 16MHz\n"
+									"Marque 2 para seleccionar el reloj LSE a  32.768 kHz\n"
+									"Marque 3 para seleccionar el reloj PLL a 100MHz \n");
+
+
+		writeMsg(&handlerUsart1, "                                                                                                            "
+					"                                                                                                                              \n");
+
+
+
+		writeMsg(&handlerUsart1, "3) usermsg # # msg -- msg is a string comming from outside\n");
 	}
-	// El comando dummy sirve para entender como funciona la recepción de números enviados
-	// desde la consola
 
+	//Comando "prescaler" es el encargado de definir la division por la cual desea obtener su señal de reloj en el MCO pin A8
 
+	else if (strcmp(cmd,"prescaler")== 0){
+		//Se llama a la funcion de comandos
+			prescalerCommands();
+	}
+
+	//Comando "clock" es el encargado de definir el tipo de reloj que se desa activar en el MCO pin A8
 	else if (strcmp(cmd,"clock")== 0) {
 
 		switch(firstParameter){
 
 		case 1:
+			//Se escribe un mensaje
+			writeMsg(&handlerUsart1, "     reloj HSI\n");
 
 			//Se establece la configuracuin como reloj HSI
 			handlerClockMCO.CLOCK_Config.clock = CLOCK_HSI;
-			prescalerCommands();
+			//prescalerCommands();
+			//Se llama a la funcion que configura el reloj HSI
 			typeClock(&handlerClockMCO);
-			writeMsg(&handlerUsart2, "estoy aqui\n");
+
 
 			break;
 
 		case 2:
-
+			// Se escrube un Mensaje
+			writeMsg(&handlerUsart1, "      reloj LSE\n");
+			//Se establece la configuracion como LSE
 			handlerClockMCO.CLOCK_Config.clock = CLOCK_LSE;
-			prescalerCommands();
+			//prescalerCommands();
+			//Se llama a la funcion que configura el reloj LSE deshabilitando la proteccion en el PWR y activando el LSE
 			typeClock(&handlerClockMCO);
+
 
 			break;
 
 		case 3:
-			prescalerCommands();
-			writeMsg(&handlerUsart2, "estoy aqui\n");
+
+			//Se escribe un mensaje
+			writeMsg(&handlerUsart1, "     reloj PLL\n");
+
+			//prescalerCommands();
+
+			//En este caso al ser la configuracion base no se requiere configurar a PLL
+			//Solo se llama la funcion
 			configPll(&handlerPllMCO);
+
 			break;
 
 	    default:
 	        // Valor inválido, no hacer nada o mostrar un mensaje de error
+	    	//writeMsg(&handlerUsart1, "Comando Invalido, escriba una valor correcto seguido del caracter '@' \n");
 	        return;
 		}
 
@@ -187,38 +245,159 @@ void parseCommands(char *prtBufferReception){
 
 	}
 
+	else if(strcmp(cmd,"getDate")== 0){
+
+
+		getTime(&handlerFechaActual);
+		writeMsg(&handlerUsart1, " estoy aqui\n");
+		// Convertir los valores obtenidos a una cadena de caracteres
+		char buffer[50];
+		 snprintf(buffer, sizeof(buffer), "Fecha y hora: %02d/%02d/%02d %02d:%02d:%02d\r\n",
+				 handlerFechaActual.day , handlerFechaActual.month, handlerFechaActual.year,
+				 handlerFechaActual.hour, handlerFechaActual.minute, handlerFechaActual.seconds);
+
+		    // Enviar la cadena de caracteres a través de USART1
+		// writeMsg(&handlerUsart1, " estoy aqui\n");
+		 writeMsg(&handlerUsart1, buffer);
+
+
+	}
+
+	else if(strcmp(cmd,"setDate")== 0){
+
+		unsigned int am_pm;
+		unsigned int hour;
+		unsigned int minute;
+		unsigned int seconds;
+		unsigned int format_hour;
+		unsigned int day;
+		unsigned int month;
+		unsigned int year;
+
+
+		// Leer la configuración ingresada por el usuario
+		sscanf(prtBufferReception, "%*s %u %u %u %u %u %u %u %u", &am_pm, &hour, &minute, &seconds, &format_hour, &day, &month, &year);
+
+		// Asignar los valores a los campos correspondientes de la estructura handlerFechaActual
+		handlerFechaActual.AM_PM = (uint8_t)am_pm;
+		handlerFechaActual.hour = (uint8_t)hour;
+		handlerFechaActual.minute = (uint8_t)minute;
+		handlerFechaActual.seconds = (uint8_t)seconds;
+		handlerFechaActual.format_hour = (uint8_t)format_hour;
+		handlerFechaActual.day = (uint8_t)day;
+		handlerFechaActual.month = (uint8_t)month;
+		handlerFechaActual.year = (uint16_t)year;
+
+
+		// Verificar si se seleccionó el formato de hora militar
+		if (format_hour == 0) {
+		    // Formato de 12 horas
+		    // Realizar la conversión al formato de 24 horas si es necesario
+		    if (handlerFechaActual.AM_PM == 1 && handlerFechaActual.hour < 12) {
+		        // Si es PM y la hora es menor a 12, sumar 12 horas
+		        handlerFechaActual.hour += 12;
+		    } else if (handlerFechaActual.AM_PM == 0 && handlerFechaActual.hour == 12) {
+		        // Si es AM y la hora es 12, convertir a 0 (medianoche)
+		        handlerFechaActual.hour = 0;
+		    }
+		}
+
+		// Verificar si el formato de hora es de 12 horas y ajustar la hora si es necesario
+		if (format_hour == 1) {
+		    if (am_pm == 1 && hour < 12) {
+		        // Si es PM y la hora es menor a 12, sumar 12 horas
+		        handlerFechaActual.hour += 12;
+		    } else if (am_pm == 0 && hour == 12) {
+		        // Si es AM y la hora es 12, cambiar a 0 horas
+		        handlerFechaActual.hour = 0;
+		    }
+		}
+
+		// Verificar y ajustar los valores de fecha y hora si se exceden los límites
+		// Asumiendo que los meses son del 1 al 12 y los días van del 1 al 31
+		if (handlerFechaActual.month > 12) {
+		    handlerFechaActual.month = 1;
+		    handlerFechaActual.year++;
+		}
+		if (handlerFechaActual.day > 31) {
+		    handlerFechaActual.day = 1;
+		    handlerFechaActual.month++;
+		    if (handlerFechaActual.month > 12) {
+		        handlerFechaActual.month = 1;
+		        handlerFechaActual.year++;
+		    }
+		}
+
+		setTime(&handlerFechaActual);
+
+		// Convertir los valores obtenidos a una cadena de caracteres
+		char buffer[150];
+		char am_pm_str[3];
+
+		// Determinar si es AM o PM
+		if (handlerFechaActual.AM_PM == 0) {
+		    strcpy(am_pm_str, "AM");
+		} else {
+		    strcpy(am_pm_str, "PM");
+		}
+
+		snprintf(buffer, sizeof(buffer), "Fecha y hora: %02d/%02d/%02d %02d:%02d:%02d %s\r\n",
+		         handlerFechaActual.day, handlerFechaActual.month, handlerFechaActual.year,
+		         handlerFechaActual.hour, handlerFechaActual.minute, handlerFechaActual.seconds,
+		         am_pm_str);
+
+		    // Enviar la cadena de caracteres a través de USART1
+		// writeMsg(&handlerUsart1, " estoy aqui\n");
+		 writeMsg(&handlerUsart1, buffer);
+
+	}
+
+
+
+
 
 
 }
 
-
+/*La funcion prescalerCommands llama los diferentes casos en donde se puede configurar el prescaler,
+ * /para esto, comfigura el prescaler de la configuracion del reloj y luego llama a la funcion prescalerClock*/
 void prescalerCommands(void){
 
-	switch(secondParameter){
+	switch(firstParameter){
 	case 0:
 		handlerClockMCO.CLOCK_Config.prescaler= NO_DIVISION;
 		prescalerClock(&handlerClockMCO);
+
+
 		break;
 
 	case 2:
 		handlerClockMCO.CLOCK_Config.prescaler= DIVISION_BY2;
 		prescalerClock(&handlerClockMCO);
+
+
 		break;
 
 	case 3:
 
 		handlerClockMCO.CLOCK_Config.prescaler= DIVISION_BY3;
 		prescalerClock(&handlerClockMCO);
+
+
 		break;
 
 	case 4:
 		handlerClockMCO.CLOCK_Config.prescaler= DIVISION_BY4;
 		prescalerClock(&handlerClockMCO);
+
+
 		break;
 
 	case 5:
 		handlerClockMCO.CLOCK_Config.prescaler= DIVISION_BY5;
 		prescalerClock(&handlerClockMCO);
+
+
 		break;
 
     default:
@@ -309,21 +488,37 @@ void InitSystem(void){
 	GPIO_Config(&handlerPinRx);
 
 	// Configurando la comunicación serial (Cable verde es TX, Cable Blanco es RX)
-	handlerUsart2.ptrUSARTx 					= USART1;
-	handlerUsart2.USART_Config.MCU_frecuency 	= USART_MCU_FREQUENCY_100MHz;
-	handlerUsart2.USART_Config.USART_baudrate	= USART_BAUDRATE_115200;
-	handlerUsart2.USART_Config.USART_datasize	= USART_DATASIZE_8BIT;
-	handlerUsart2.USART_Config.USART_parity		= USART_PARITY_NONE;
-	handlerUsart2.USART_Config.USART_stopbits	= USART_STOPBIT_1;
-	handlerUsart2.USART_Config.USART_mode		= USART_MODE_RXTX;
-	handlerUsart2.USART_Config.USART_enableInterrupt = USART_RX_INTERRUP_ENABLE ;
+	handlerUsart1.ptrUSARTx 					= USART1;
+	handlerUsart1.USART_Config.MCU_frecuency 	= USART_MCU_FREQUENCY_100MHz;
+	handlerUsart1.USART_Config.USART_baudrate	= USART_BAUDRATE_115200;
+	handlerUsart1.USART_Config.USART_datasize	= USART_DATASIZE_8BIT;
+	handlerUsart1.USART_Config.USART_parity		= USART_PARITY_NONE;
+	handlerUsart1.USART_Config.USART_stopbits	= USART_STOPBIT_1;
+	handlerUsart1.USART_Config.USART_mode		= USART_MODE_RXTX;
+	handlerUsart1.USART_Config.USART_enableInterrupt = USART_RX_INTERRUP_ENABLE ;
 
 	// Cargamos la configuración del USART
-	USART_Config(&handlerUsart2);
+	USART_Config(&handlerUsart1);
+
+//------------------------------------------ADC------------------------------------------------
+
+
+	//Se coofigura en CHANNEL0 para la ADC
+	adcConfigChanels.resolution = ADC_RESOLUTION_12_BIT;
+	adcConfigChanels.dataAlignment = ADC_ALIGNMENT_RIGHT;
+
+
+	adcConfigChanels.channels[1] = ADC_CHANNEL_1;
+	adcConfigChanels.channels[2] = ADC_CHANNEL_2;
+
+	multiChannelConfig(&adcConfigChanels, 2);
+
+
+
+
 
 
 }
-
 /* Callback del Timer2 - Hacemos un blinky... */
 void BasicTimer2_Callback(void){
 	handlerStateLed.pGPIOx -> ODR ^= GPIO_ODR_OD5;		// Encendido y apagado StateLED
