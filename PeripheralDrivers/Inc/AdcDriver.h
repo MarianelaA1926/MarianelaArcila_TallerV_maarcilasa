@@ -52,6 +52,8 @@
 
 typedef struct
 {
+
+	uint8_t		dataTrigger;
 	uint8_t		channel;		// Canal ADC que será utilizado para la conversión ADC
 	uint8_t		resolution;		// Precisión con la que el ADC hace la adquisición del dato
 	uint16_t	samplingPeriod;	// Tiempo deseado para hacer la adquisición del dato

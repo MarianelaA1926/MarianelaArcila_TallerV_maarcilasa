@@ -120,7 +120,6 @@ void adc_Config(ADC_Config_t *adcConfig){
 	/* 11b. Configuramos la prioridad para la interrupción ADC */
 	// Escriba su código acá
 	__NVIC_SetPriority(ADC_IRQn, 1);
-
 	/* 12. Activamos el modulo ADC */
 	// Escriba su código acá
 	ADC1->CR2 |= ADC_CR2_ADON;
@@ -333,6 +332,7 @@ void configAnalogPin(uint8_t adcChannel) {
 
 void multiChannelConfig (ADC_Config_t *adcConfig, uint8_t numConversiones){
 	/* 1. Configuramos el PinX para que cumpla la función de canal análogo deseado. */
+
 	for (uint8_t i = 0; i < numConversiones; i++){
 		configAnalogPin (adcConfig ->channels[i]);
 
@@ -412,10 +412,9 @@ void multiChannelConfig (ADC_Config_t *adcConfig, uint8_t numConversiones){
 	/* 7. Acá se debería configurar el sampling...*/
 
 	for (uint8_t i = 0; i < numConversiones; i++){
-
-	if(adcConfig->channel < ADC_CHANNEL_10){
-		// Escriba su código acá
-		ADC1->SMPR2 |= adcConfig->samplingPeriod << (3*adcConfig->channels[i]);
+		if(adcConfig->channel < ADC_CHANNEL_10){
+			// Escriba su código acá
+			ADC1->SMPR2 |= adcConfig->samplingPeriod << (3*adcConfig->channels[i]);
 	}
 	else{
 		// Escriba su código acá
@@ -481,7 +480,7 @@ void multiChannelConfig (ADC_Config_t *adcConfig, uint8_t numConversiones){
 void externalTimerEvent(ADC_Config_t *adcConfig){
 
 	// 1) External trigger enable for regular channels
-	switch (adcConfig -> interrups_polarity) {
+	switch (adcConfig -> dataTrigger) {
 
 		case 0:
 			//Trigger detection disabled

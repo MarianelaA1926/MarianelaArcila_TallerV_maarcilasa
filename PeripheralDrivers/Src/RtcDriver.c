@@ -151,9 +151,7 @@ void getTime(handlerRTC_t *fechaActual){
 	uint32_t RTC_DR_DATA = 0;
 
 	// Esperamos a que los registros se sincronicen
-	while (!(RTC->ISR & RTC_ISR_RSF)) {
-		__NOP();
-	}
+	while (!(RTC->ISR & RTC_ISR_RSF));
 
 	RTC_TR_DATA |= RTC->TR;
 	RTC_DR_DATA |= RTC->DR;

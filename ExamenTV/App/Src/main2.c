@@ -63,7 +63,7 @@ handlerRTC_t handlerFechaActual = {0};
 
 
 uint8_t rxData = 0;
-char bufferData[64];
+char bufferData[256];
 char cmd[64];
 #define BUFFER_SIZE 150
 char bufferReception[BUFFER_SIZE];
@@ -85,8 +85,13 @@ GPIO_Handler_t handlerMCO1Pin = {0};
 
 //ADC
 
-ADC_Config_t adcConfigChanels = {0};
+ADC_Config_t handlerAdcConfigChanels= {0};
+uint16_t adcData = 0;
 
+
+uint16_t channel1Data[256];
+uint16_t channel2Data[266];
+uint16_t getADCValue(void);
 
 /* Definición de prototipos de funciones */
 void InitSystem(void);
@@ -94,6 +99,8 @@ void parseCommands(char *prtBufferReception);
 
 
 void prescalerCommands(void);
+void setDate(char *prtBufferReception);
+void readADC(void);
 /**
  * Funcion principal del programa.
  * Esta funcion es el corazón del programa!!
@@ -182,9 +189,51 @@ void parseCommands(char *prtBufferReception){
 
 
 
-		writeMsg(&handlerUsart1, "3) usermsg # # msg -- msg is a string comming from outside\n");
-	}
+		writeMsg(&handlerUsart1, "4) setDate-- Seleccione este comando si desea modifical el reloj RTC siga los siguientes pasos\n"
+								   " Igrese  AM/PM:  '0' para AM (antes del mediodía) o '1' para PM \n"
+						           " La hora \n"
+								   " Los minutos \n"
+								   " Los segundos \n"
+								   " formato de hora:  '0' para el formato de 12 horas o '1' para el formato de 24 horas (hora militar) \n"
+								   " El día\n"
+								   " El mes\n"
+								   " El año\n"
+								   " EJEMPLO: setDate 1 10 21 54 1 11 12 1995@");
 
+
+		writeMsg(&handlerUsart1, "                                                                                                            "
+					"                                                                                                                              \n");
+
+
+
+
+
+		writeMsg(&handlerUsart1, " 5) getDate --Seleccione este comando si desea saber cuanto lleva prendido el RTC  \n");
+
+
+		writeMsg(&handlerUsart1, "                                                                                                            "
+					"                                                                                                                              \n");
+
+		writeMsg(&handlerUsart1, " 5) ADCconfig --Seleccione la configuracion del ADC para y el array"
+								 " '0' para detección de activación desactivada."
+								 " '1' flanco ascendente."
+								 " '2' flanco descendente. "
+								 " '3' Ambos flancos \n");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	}
 	//Comando "prescaler" es el encargado de definir la division por la cual desea obtener su señal de reloj en el MCO pin A8
 
 	else if (strcmp(cmd,"prescaler")== 0){
@@ -244,112 +293,69 @@ void parseCommands(char *prtBufferReception){
 
 
 	}
+	else if (strcmp(cmd,"setDate")== 0) {
+		writeMsg(&handlerUsart1, "     estoy en setDate\n");
+		setDate(prtBufferReception);
+	}
 
-	else if(strcmp(cmd,"getDate")== 0){
+	else if (strcmp(cmd,"getDate")== 0) {
 
-
+		writeMsg(&handlerUsart1, "     estoy en getDate\n");
 		getTime(&handlerFechaActual);
-		writeMsg(&handlerUsart1, " estoy aqui\n");
+
 		// Convertir los valores obtenidos a una cadena de caracteres
 		char buffer[50];
-		 snprintf(buffer, sizeof(buffer), "Fecha y hora: %02d/%02d/%02d %02d:%02d:%02d\r\n",
+		snprintf(buffer, sizeof(buffer), "Fecha y hora: %02d/%02d/%02d %02d:%02d:%02d\r\n",
 				 handlerFechaActual.day , handlerFechaActual.month, handlerFechaActual.year,
 				 handlerFechaActual.hour, handlerFechaActual.minute, handlerFechaActual.seconds);
 
-		    // Enviar la cadena de caracteres a través de USART1
+			// Enviar la cadena de caracteres a través de USART1
 		// writeMsg(&handlerUsart1, " estoy aqui\n");
 		 writeMsg(&handlerUsart1, buffer);
-
 
 	}
 
-	else if(strcmp(cmd,"setDate")== 0){
+	else if (strcmp(cmd,"ADCconfig")== 0) {
 
-		unsigned int am_pm;
-		unsigned int hour;
-		unsigned int minute;
-		unsigned int seconds;
-		unsigned int format_hour;
-		unsigned int day;
-		unsigned int month;
-		unsigned int year;
+		writeMsg(&handlerUsart1, "  estoy en ADCconfig\n");
+		//Se activan los dos canales ADC
 
 
-		// Leer la configuración ingresada por el usuario
-		sscanf(prtBufferReception, "%*s %u %u %u %u %u %u %u %u", &am_pm, &hour, &minute, &seconds, &format_hour, &day, &month, &year);
+		handlerAdcConfigChanels.dataTrigger = firstParameter;
+		handlerAdcConfigChanels.dataAlignment = ADC_ALIGNMENT_RIGHT;
+		handlerAdcConfigChanels.resolution =ADC_RESOLUTION_12_BIT;
+		handlerAdcConfigChanels.samplingPeriod = ADC_SAMPLING_PERIOD_15_CYCLES;
+		//Se coofigura en CHANNEL1 y CHANNEL2 para la ADC
+		handlerAdcConfigChanels.channels[0] = ADC_CHANNEL_1;
 
-		// Asignar los valores a los campos correspondientes de la estructura handlerFechaActual
-		handlerFechaActual.AM_PM = (uint8_t)am_pm;
-		handlerFechaActual.hour = (uint8_t)hour;
-		handlerFechaActual.minute = (uint8_t)minute;
-		handlerFechaActual.seconds = (uint8_t)seconds;
-		handlerFechaActual.format_hour = (uint8_t)format_hour;
-		handlerFechaActual.day = (uint8_t)day;
-		handlerFechaActual.month = (uint8_t)month;
-		handlerFechaActual.year = (uint16_t)year;
+		handlerAdcConfigChanels.channels[1] = ADC_CHANNEL_2;
+
+		externalTimerEvent(&handlerAdcConfigChanels);
+		multiChannelConfig(&handlerAdcConfigChanels, 2);
+
+        // Realizar la lectura del ADC
+        readADC();
+
+        // Imprimir los datos en USART1
+        writeMsg(&handlerUsart1, "Datos del canal 1:\n");
+        for (int i = 0; i < 256; i++) {
+            char msg[20];
+            snprintf(msg, sizeof(msg), "%d\n", channel1Data[i]);
+            writeMsg(&handlerUsart1, msg);
+        }
+
+        writeMsg(&handlerUsart1, "Datos del canal 2:\n");
+        for (int i = 0; i < 256; i++) {
+            char msg[20];
+            snprintf(msg, sizeof(msg), "%d\n", channel2Data[i]);
+            writeMsg(&handlerUsart1, msg);
+        }
 
 
-		// Verificar si se seleccionó el formato de hora militar
-		if (format_hour == 0) {
-		    // Formato de 12 horas
-		    // Realizar la conversión al formato de 24 horas si es necesario
-		    if (handlerFechaActual.AM_PM == 1 && handlerFechaActual.hour < 12) {
-		        // Si es PM y la hora es menor a 12, sumar 12 horas
-		        handlerFechaActual.hour += 12;
-		    } else if (handlerFechaActual.AM_PM == 0 && handlerFechaActual.hour == 12) {
-		        // Si es AM y la hora es 12, convertir a 0 (medianoche)
-		        handlerFechaActual.hour = 0;
-		    }
-		}
 
-		// Verificar si el formato de hora es de 12 horas y ajustar la hora si es necesario
-		if (format_hour == 1) {
-		    if (am_pm == 1 && hour < 12) {
-		        // Si es PM y la hora es menor a 12, sumar 12 horas
-		        handlerFechaActual.hour += 12;
-		    } else if (am_pm == 0 && hour == 12) {
-		        // Si es AM y la hora es 12, cambiar a 0 horas
-		        handlerFechaActual.hour = 0;
-		    }
-		}
-
-		// Verificar y ajustar los valores de fecha y hora si se exceden los límites
-		// Asumiendo que los meses son del 1 al 12 y los días van del 1 al 31
-		if (handlerFechaActual.month > 12) {
-		    handlerFechaActual.month = 1;
-		    handlerFechaActual.year++;
-		}
-		if (handlerFechaActual.day > 31) {
-		    handlerFechaActual.day = 1;
-		    handlerFechaActual.month++;
-		    if (handlerFechaActual.month > 12) {
-		        handlerFechaActual.month = 1;
-		        handlerFechaActual.year++;
-		    }
-		}
-
-		setTime(&handlerFechaActual);
-
-		// Convertir los valores obtenidos a una cadena de caracteres
-		char buffer[150];
-		char am_pm_str[3];
-
-		// Determinar si es AM o PM
-		if (handlerFechaActual.AM_PM == 0) {
-		    strcpy(am_pm_str, "AM");
-		} else {
-		    strcpy(am_pm_str, "PM");
-		}
-
-		snprintf(buffer, sizeof(buffer), "Fecha y hora: %02d/%02d/%02d %02d:%02d:%02d %s\r\n",
-		         handlerFechaActual.day, handlerFechaActual.month, handlerFechaActual.year,
-		         handlerFechaActual.hour, handlerFechaActual.minute, handlerFechaActual.seconds,
-		         am_pm_str);
-
-		    // Enviar la cadena de caracteres a través de USART1
-		// writeMsg(&handlerUsart1, " estoy aqui\n");
-		 writeMsg(&handlerUsart1, buffer);
-
+	}
+	else if (strcmp(cmd,"ADCArray")== 0) {
+		writeMsg(&handlerUsart1, "     estoy en ADCArry\n");
 	}
 
 
@@ -357,6 +363,32 @@ void parseCommands(char *prtBufferReception){
 
 
 
+
+
+}
+uint16_t getADCValue(void){
+
+    ADC1->CR2 |= ADC_CR2_SWSTART; // Iniciar la conversión
+    while (!(ADC1->SR & ADC_SR_EOC)); // Esperar hasta que la conversión esté completa
+    return ADC1->DR; // Devolver el valor convertido
+}
+
+
+void readADC(void) {
+    for (int sampleIndex = 0; sampleIndex < 256; sampleIndex++) {
+
+
+
+
+        // Leer el valor del ADC del canal 1 y almacenarlo en el arreglo channel1Data
+
+    	channel1Data[sampleIndex] = getADCValue();
+
+
+
+        // Leer el valor del ADC del canal 2 y almacenarlo en el arreglo channel2Data
+        channel2Data[sampleIndex] = getADCValue();
+    }
 }
 
 /*La funcion prescalerCommands llama los diferentes casos en donde se puede configurar el prescaler,
@@ -408,6 +440,94 @@ void prescalerCommands(void){
 }
 
 
+void setDate(char *prtBufferReception){
+
+	unsigned int am_pm;
+	unsigned int hour;
+	unsigned int minute;
+	unsigned int seconds;
+	unsigned int format_hour;
+	unsigned int day;
+	unsigned int month;
+	unsigned int year;
+
+
+	// Leer la configuración ingresada por el usuario
+	sscanf(prtBufferReception, "%*s %u %u %u %u %u %u %u %u", &am_pm, &hour, &minute, &seconds, &format_hour, &day, &month, &year);
+
+	// Asignar los valores a los campos correspondientes de la estructura handlerFechaActual
+	handlerFechaActual.AM_PM = (uint8_t)am_pm;
+	handlerFechaActual.hour = (uint8_t)hour;
+	handlerFechaActual.minute = (uint8_t)minute;
+	handlerFechaActual.seconds = (uint8_t)seconds;
+	handlerFechaActual.format_hour = (uint8_t)format_hour;
+	handlerFechaActual.day = (uint8_t)day;
+	handlerFechaActual.month = (uint8_t)month;
+	handlerFechaActual.year = (uint16_t)year;
+
+
+	// Verificar si se seleccionó el formato de hora militar
+	if (format_hour == 0) {
+	    // Formato de 12 horas
+	    // Realizar la conversión al formato de 24 horas si es necesario
+	    if (handlerFechaActual.AM_PM == 1 && handlerFechaActual.hour < 12) {
+	        // Si es PM y la hora es menor a 12, sumar 12 horas
+	        handlerFechaActual.hour += 12;
+	    } else if (handlerFechaActual.AM_PM == 0 && handlerFechaActual.hour == 12) {
+	        // Si es AM y la hora es 12, convertir a 0 (medianoche)
+	        handlerFechaActual.hour = 0;
+	    }
+	}
+
+	// Verificar si el formato de hora es de 12 horas y ajustar la hora si es necesario
+	if (format_hour == 1) {
+	    if (am_pm == 1 && hour < 12) {
+	        // Si es PM y la hora es menor a 12, sumar 12 horas
+	        handlerFechaActual.hour += 12;
+	    } else if (am_pm == 0 && hour == 12) {
+	        // Si es AM y la hora es 12, cambiar a 0 horas
+	        handlerFechaActual.hour = 0;
+	    }
+	}
+
+	// Verificar y ajustar los valores de fecha y hora si se exceden los límites
+	// Asumiendo que los meses son del 1 al 12 y los días van del 1 al 31
+	if (handlerFechaActual.month > 12) {
+	    handlerFechaActual.month = 1;
+	    handlerFechaActual.year++;
+	}
+	if (handlerFechaActual.day > 31) {
+	    handlerFechaActual.day = 1;
+	    handlerFechaActual.month++;
+	    if (handlerFechaActual.month > 12) {
+	        handlerFechaActual.month = 1;
+	        handlerFechaActual.year++;
+	    }
+	}
+
+	setTime(&handlerFechaActual);
+
+	// Convertir los valores obtenidos a una cadena de caracteres
+	char buffer[150];
+	char am_pm_str[3];
+
+	// Determinar si es AM o PM
+	if (handlerFechaActual.AM_PM == 0) {
+	    strcpy(am_pm_str, "AM");
+	} else {
+	    strcpy(am_pm_str, "PM");
+	}
+
+	snprintf(buffer, sizeof(buffer), "Fecha y hora: %02d/%02d/%02d %02d:%02d:%02d %s\r\n",
+	         handlerFechaActual.day, handlerFechaActual.month, handlerFechaActual.year,
+	         handlerFechaActual.hour, handlerFechaActual.minute, handlerFechaActual.seconds,
+	         am_pm_str);
+
+	    // Enviar la cadena de caracteres a través de USART1
+	// writeMsg(&handlerUsart1, " estoy aqui\n");
+	 writeMsg(&handlerUsart1, buffer);
+}
+
 /*
  * Funcion encargada de la inicializacion de los elementos del sistema
  */
@@ -441,7 +561,7 @@ void InitSystem(void){
 
 	handlerStateTimer.ptrTIMx 						= TIM2;
 	handlerStateTimer.TIMx_Config.TIMx_mode			= BTIMER_MODE_UP;
-	handlerStateTimer.TIMx_Config.TIMx_speed		= BTIMER_80SPEED_1ms;
+	handlerStateTimer.TIMx_Config.TIMx_speed		= BTIMER_100SPEED_1ms;
 	handlerStateTimer.TIMx_Config.TIMx_period		= 250;
 
 	// Cargamos la configuración del timer
@@ -455,7 +575,7 @@ void InitSystem(void){
 //--------------------------------------CMD-Comunication------------------------------------------------------
 	// Configurando el pin para el Led_Blinky
 	handlerStateLed.pGPIOx 								= GPIOA;
-	handlerStateLed.GPIO_PinConfig.GPIO_PinNumber		= PIN_5;
+	handlerStateLed.GPIO_PinConfig.GPIO_PinNumber		= PIN_0;
 	handlerStateLed.GPIO_PinConfig.GPIO_PinMode			= GPIO_MODE_OUT;
 	handlerStateLed.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
 	handlerStateLed.GPIO_PinConfig.GPIO_PinSpeed		= GPIO_OSPEED_FAST;
@@ -503,15 +623,6 @@ void InitSystem(void){
 //------------------------------------------ADC------------------------------------------------
 
 
-	//Se coofigura en CHANNEL0 para la ADC
-	adcConfigChanels.resolution = ADC_RESOLUTION_12_BIT;
-	adcConfigChanels.dataAlignment = ADC_ALIGNMENT_RIGHT;
-
-
-	adcConfigChanels.channels[1] = ADC_CHANNEL_1;
-	adcConfigChanels.channels[2] = ADC_CHANNEL_2;
-
-	multiChannelConfig(&adcConfigChanels, 2);
 
 
 
@@ -534,3 +645,10 @@ void usart1_Callback(void){
 	rxData = getRxData();
 }
 
+void adcComplete_Callback(void){
+	adcData = getADC();
+}
+/* Callback del Timer2 - Hacemos un blinky... */
+void BasicTimer3_Callback(void){
+			// Encendido y apagado StateLED
+}
