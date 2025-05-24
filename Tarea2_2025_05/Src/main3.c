@@ -31,6 +31,19 @@
 GPIO_Handler_t handlerStateLed = {0};
 BasicTimer_Handler_t handlerTimerStateLed = {0};
 //---------------------------------------------------------Buton-------------------------------------------------------
+
+int main(void)
+{
+	initSystem();
+	while(1){
+
+
+	}
+	return 0;
+}
+
+/* Pin configuration function  */
+
 void initSystem(void){
 
 	// --------------------------------- State Led--------------------------------------------------//
@@ -64,7 +77,16 @@ void initSystem(void){
 
 
 }
+void BasicTimer2_Callback(void){
 
+	/* To create a status LED, we need to link the timer with the GPIO.
+	 * We can do this by calling the Toggle function in the Timer Callback.
+	 * This generates the interrupt that will toggle the LED state.*/
+	GPIOxTooglePin(&handlerStateLed);
+
+
+
+}
 
 
 void assert_failed(uint8_t* file, uint32_t line){
