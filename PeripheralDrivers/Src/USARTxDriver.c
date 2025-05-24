@@ -373,8 +373,8 @@ void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSed) {
 		writeChar(ptrUsartHandler, *msgToSed);
 		msgToSed++;
 	}
-}
 
+}
 
 uint8_t getRxData(void){
 	return auxRxData;
