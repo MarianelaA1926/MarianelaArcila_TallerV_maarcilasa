@@ -6,8 +6,11 @@
 				<externalSettings>
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/PeripheralDrivers"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/Tarea2_Marcila_2025"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/PeripheralDrivers/Debug"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/Tarea2_Marcila_2025/Debug"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="PeripheralDrivers" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="Tarea2_Marcila_2025" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
@@ -89,8 +92,11 @@
 				<externalSettings>
 					<externalSetting>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/PeripheralDrivers"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="includePath" name="/Tarea2_Marcila_2025"/>
 						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/PeripheralDrivers/Release"/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="libraryPath" name="/Tarea2_Marcila_2025/Release"/>
 						<entry flags="RESOLVED" kind="libraryFile" name="PeripheralDrivers" srcPrefixMapping="" srcRootPath=""/>
+						<entry flags="RESOLVED" kind="libraryFile" name="Tarea2_Marcila_2025" srcPrefixMapping="" srcRootPath=""/>
 					</externalSetting>
 				</externalSettings>
 				<extensions>
