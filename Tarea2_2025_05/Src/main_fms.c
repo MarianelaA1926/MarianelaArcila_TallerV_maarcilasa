@@ -229,7 +229,7 @@ void fsm(void) {
                     GPIO_WritePin(&handlerLedRed, RESET);
                     GPIO_WritePin(&handlerLedGreen, RESET);
                     GPIO_WritePin(&handlerLedBlue, RESET);
-                    break;
+                    break ;
             }
 
             // Vuelve a estado IDLE
