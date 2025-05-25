@@ -119,7 +119,7 @@ void initSystem(void){
 	handlerTimerStateLed.ptrTIMx = 										TIM2;
 	handlerTimerStateLed.TIMx_Config.TIMx_mode = 						BTIMER_MODE_UP;
 	handlerTimerStateLed.TIMx_Config.TIMx_speed= 						BTIMER_SPEED_1ms;
-	handlerTimerStateLed.TIMx_Config.TIMx_period = 						250;
+	handlerTimerStateLed.TIMx_Config.TIMx_period = 						150;
 	handlerTimerStateLed.TIMx_Config.TIMx_interrupEnable=				BTIMER_ENABLE;
 	// We load the configuration
 	BasicTimer_Config(&handlerTimerStateLed);
