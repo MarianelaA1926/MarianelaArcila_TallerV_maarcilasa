@@ -1,18 +1,13 @@
 /*
  * USARTxDriver.h
  *
- *  Created on: 21/05/2023
- *      Author:Marianela Arcila Sanchez		maarcilasa
- *  This program is responsible for
- *  defining the control of the USARTx peripheral. (control funtions)
- *
+ *  Created on: 25/05/2023
+ *      Author: marianela
  */
 
-#ifndef USARTXDRIVER_H_
-#define USARTXDRIVER_H_
+#ifndef INC_USARTXDRIVER_H_
+#define INC_USARTXDRIVER_H_
 
-#include <stm32f4xx.h>
-#include <stdio.h>
 
 
 #define USART_MODE_TX		0
@@ -36,46 +31,35 @@
 #define USART_STOPBIT_2		2
 #define USART_STOPBIT_1_5	3
 
-#define USART_RX_INTERRUP_ENABLE  0
-#define USART_TX_INTERRUP_ENABLE  1
 
-#define USART_TC_INTERRUP_EVENT 	0
-#define USART_TXE_INTERRUP_EVENT	1
-
-#define USART_MCU_FREQUENCY_16MHz 0
-#define USART_MCU_FREQUENCY_80MHz 1
-#define USART_MCU_FREQUENCY_100MHz 2
-
-/* Structure for communication configuration:
-   Baudrate
-   Data size
-   Error control
-   Stop bit
-*/
+#define USART_RX_INTERRUP_DISABLE 0
+#define USART_RX_INTERRUP_ENABLE  1
 
 
+/* Estructura para la configuración de la comunicacion:
+ * Velocidad (baudrate)
+ * Tamaño de los datos
+ * Control de errores
+ * Bit de parada
+ */
 typedef struct
 {
-	uint8_t MCU_frecuency;
 	uint8_t USART_mode;
 	uint8_t USART_baudrate;
 	uint8_t USART_datasize;
 	uint8_t USART_parity;
 	uint8_t USART_stopbits;
-	uint8_t USART_enableInterrupt;
-	uint8_t USART_interruptTx;
+	uint8_t USART_enableIntRx;
 }USART_Config_t;
 
 /*
- * Definition of the Handler for a USART:
- *
- * - Structure that contains the Special
- * 	 Function Registers (SFR) that control the peripheral
- * - Structure that contains the specific configuration of the object
- * - Data reception buffer
- * - Element indicating how many data have been received
- * - Data transmission buffer
- * - Element indicating how many data need to be sent.
+ * Definicion del Handler para un USART:
+ * - Estructura que contiene los SFR que controlan el periferico
+ * - Estructura que contiene la configuración especifica del objeto
+ * - Buffer de recepcion de datos
+ * - Elemento que indica cuantos datos se recibieron
+ * - Buffer de transmision de datos
+ * - Elemento que indica cuantos datos se deben enviar.
  */
 typedef struct
 {
@@ -89,15 +73,14 @@ typedef struct
 
 
 
-/* Definition of prototypes for USART functions */
-void usart1_Callback(void);
-void usart2_Callback(void);
-void usart6_Callback(void);
-
-
+/* Definicion de los prototipos para las funciones del USART */
+void usart2Rx_Callback(void);
+void usart1Rx_Callback(void);
+void usart6Rx_Callback(void);
 void USART_Config(USART_Handler_t *ptrUsartHandler);
 int writeChar(USART_Handler_t *ptrUsartHandler, int dataToSend );
-void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSed);
+void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSed );
 uint8_t getRxData(void);
-uint8_t getTxData(void);
-#endif /* USARTXDRIVER_H_ */
+
+
+#endif /* INC_USARTXDRIVER_H_ */

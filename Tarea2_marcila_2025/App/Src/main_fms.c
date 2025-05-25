@@ -310,6 +310,7 @@ void initSystem(void){
 
 
 	//------------------------------------------------------------TIMER INTERRUPCION----------------------------------
+/*
 
 	handlerTimerSG.ptrTIMx = 										TIM3;
 	handlerTimerSG.TIMx_Config.TIMx_mode = 						    BTIMER_MODE_UP;
@@ -321,6 +322,7 @@ void initSystem(void){
 	// We activate the TIM3
 	starTimer(&handlerTimerSG);
 
+*/
 
 	//------------------------------------------ENCODER---------------------------------------------------------------
 	//---CLK-----------------------------------------------------

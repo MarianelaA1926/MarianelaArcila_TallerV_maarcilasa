@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>Tarea2_2025_05</name>
+	<name>Tarea2_marcila_2025</name>
 	<comment></comment>
 	<projects>
-		<project>PeripheralDrivers</project>
-		<project>Tarea2_2025_05</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
