@@ -346,7 +346,7 @@ void initSystem(void){
 	handlerTimerSG.ptrTIMx = 										TIM3;
 	handlerTimerSG.TIMx_Config.TIMx_mode = 						BTIMER_MODE_UP;
 	handlerTimerSG.TIMx_Config.TIMx_speed= 						BTIMER_SPEED_1ms;
-	handlerTimerSG.TIMx_Config.TIMx_period = 						4;
+	handlerTimerSG.TIMx_Config.TIMx_period = 						5;
 	handlerTimerSG.TIMx_Config.TIMx_interrupEnable=				BTIMER_DISABLE;
 	// We load the configuration
 	BasicTimer_Config(&handlerTimerSG);
