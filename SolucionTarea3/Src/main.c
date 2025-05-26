@@ -155,7 +155,7 @@ void initSystem(void){
 
 	//ExtiConfiguration
 	handlerExtiEncoderCK.pGPIOHandler= 									&handlerEncoderClock;
-	handlerExtiEncoderCK.edgeType = 										EXTERNAL_INTERRUPT_RISING_EDGE;
+	handlerExtiEncoderCK.edgeType = 									EXTERNAL_INTERRUPT_RISING_EDGE;
 	extInt_Config(&handlerExtiEncoderCK);
 
 
@@ -335,7 +335,6 @@ void callback_extInt4(void){
 
 
 }
-
 
 
 

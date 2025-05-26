@@ -69,6 +69,9 @@ GPIO_Handler_t handlerEncoderCLK = {0};
 EXTI_Config_t handlerExtiEncoderCK   = {0};
 GPIO_Handler_t handlerEncoderDT = {0};
 EXTI_Config_t handlerExtiEncoderDT = {0};
+
+int16_t contadorGlobal = 0;
+uint8_t arrayDisplay[4] = {'N', 'N', 'N', 'N'};
 //-------------------------------------------------------FSM----------------------------------------------------
 
 // Definición de los estados de la FSM
@@ -116,7 +119,7 @@ void initSystem(void){
 	handlerTimerStateLed.ptrTIMx = 										TIM2;
 	handlerTimerStateLed.TIMx_Config.TIMx_mode = 						BTIMER_MODE_UP;
 	handlerTimerStateLed.TIMx_Config.TIMx_speed= 						BTIMER_SPEED_1ms;
-	handlerTimerStateLed.TIMx_Config.TIMx_period = 						650;
+	handlerTimerStateLed.TIMx_Config.TIMx_period = 						250;
 	handlerTimerStateLed.TIMx_Config.TIMx_interrupEnable=				BTIMER_ENABLE;
 
 	BasicTimer_Config(&handlerTimerStateLed);
@@ -189,16 +192,16 @@ void initSystem(void){
 
 	//--------------------------- DIGITOS DISPLAY (TRANSISTORES)-------------
 
-	handlerDigit4.pGPIOx = GPIOC;
-	handlerDigit4.GPIO_PinConfig.GPIO_PinNumber = PIN_9;
+	handlerDigit4.pGPIOx = GPIOA;
+	handlerDigit4.GPIO_PinConfig.GPIO_PinNumber = PIN_13;
 	handlerDigit4.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	handlerDigit4.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
 	handlerDigit4.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	handlerDigit4.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEED_FAST;
 	GPIO_Config(&handlerDigit4);
 
-	handlerDigit3.pGPIOx = GPIOC;
-	handlerDigit3.GPIO_PinConfig.GPIO_PinNumber = PIN_8;
+	handlerDigit3.pGPIOx = GPIOB;
+	handlerDigit3.GPIO_PinConfig.GPIO_PinNumber = PIN_1;
 	handlerDigit3.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	handlerDigit3.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
 	handlerDigit3.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
@@ -206,15 +209,15 @@ void initSystem(void){
 	GPIO_Config(&handlerDigit3);
 
 	handlerDigit2.pGPIOx = GPIOB;
-	handlerDigit2.GPIO_PinConfig.GPIO_PinNumber = PIN_8;
+	handlerDigit2.GPIO_PinConfig.GPIO_PinNumber = PIN_15;
 	handlerDigit2.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	handlerDigit2.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
 	handlerDigit2.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
 	handlerDigit2.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEED_FAST;
 	GPIO_Config(&handlerDigit2);
 
-	handlerDigit1.pGPIOx = GPIOC;
-	handlerDigit1.GPIO_PinConfig.GPIO_PinNumber = PIN_6;
+	handlerDigit1.pGPIOx = GPIOB;
+	handlerDigit1.GPIO_PinConfig.GPIO_PinNumber = PIN_14;
 	handlerDigit1.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_OUT;
 	handlerDigit1.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;
 	handlerDigit1.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
@@ -309,29 +312,15 @@ void initSystem(void){
 	GPIO_Config(&handlerPinLedG);
 
 
-	//------------------------------------------------------------TIMER INTERRUPCION----------------------------------
-/*
 
-	handlerTimerSG.ptrTIMx = 										TIM3;
-	handlerTimerSG.TIMx_Config.TIMx_mode = 						    BTIMER_MODE_UP;
-	handlerTimerSG.TIMx_Config.TIMx_speed= 						    BTIMER_SPEED_1ms;
-	handlerTimerSG.TIMx_Config.TIMx_period = 						10;
-	handlerTimerSG.TIMx_Config.TIMx_interrupEnable=				    BTIMER_DISABLE;
-	// We load the configuration
-	BasicTimer_Config(&handlerTimerSG);
-	// We activate the TIM3
-	starTimer(&handlerTimerSG);
-
-*/
 
 	//------------------------------------------ENCODER---------------------------------------------------------------
 	//---CLK-----------------------------------------------------
 
 	handlerEncoderCLK.pGPIOx	= 										GPIOA;
-	handlerEncoderCLK.GPIO_PinConfig.GPIO_PinNumber = 				PIN_1;
+	handlerEncoderCLK.GPIO_PinConfig.GPIO_PinNumber = 				    PIN_1;
 	handlerEncoderCLK.GPIO_PinConfig.GPIO_PinMode = 					GPIO_MODE_IN;
-	handlerEncoderCLK.GPIO_PinConfig.GPIO_PinPuPdControl = 			GPIO_PUPDR_PULLUP;
-
+	handlerEncoderCLK.GPIO_PinConfig.GPIO_PinPuPdControl = 			    GPIO_PUPDR_PULLUP;
 
 	//ExtiConfiguration
 	handlerExtiEncoderCK.pGPIOHandler= 									&handlerEncoderCLK;
@@ -343,109 +332,79 @@ void initSystem(void){
 
 
 	handlerEncoderDT.pGPIOx	= 										GPIOA;
-	handlerEncoderDT.GPIO_PinConfig.GPIO_PinNumber = 				PIN_2;
+	handlerEncoderDT.GPIO_PinConfig.GPIO_PinNumber = 				PIN_0;
 	handlerEncoderDT.GPIO_PinConfig.GPIO_PinMode = 					GPIO_MODE_IN;
 	handlerEncoderDT.GPIO_PinConfig.GPIO_PinPuPdControl = 			GPIO_PUPDR_PULLUP;
-
 
 	//ExtiConfiguration
 	handlerExtiEncoderDT.pGPIOHandler= 									&handlerEncoderDT;
 	handlerExtiEncoderDT.edgeType = 									EXTERNAL_INTERRUPT_RISING_EDGE;
-	extInt_Config(&handlerExtiEncoderCK);
+	extInt_Config(&handlerExtiEncoderDT);
 
 
+	//------------------------TIMER-----------------------------------------
+	handlerTimerSG.ptrTIMx = 										TIM3;
+	handlerTimerSG.TIMx_Config.TIMx_mode = 						BTIMER_MODE_UP;
+	handlerTimerSG.TIMx_Config.TIMx_speed= 						BTIMER_SPEED_1ms;
+	handlerTimerSG.TIMx_Config.TIMx_period = 						4;
+	handlerTimerSG.TIMx_Config.TIMx_interrupEnable=				BTIMER_DISABLE;
+	// We load the configuration
+	BasicTimer_Config(&handlerTimerSG);
+	// We activate the TIM3
+	starTimer(&handlerTimerSG);
 
 
 }
+
+
 
 //-------------------------------------------------------FSM function--------------------------------------------
 
-// Implementación de la FSM
-void fsm(void) {
-    switch (currentState) {
+void buildArrayDisplay()
+{
+	if (contadorGlobal >= 0 && contadorGlobal < 10) {
+		arrayDisplay[0] = 'N';
+		arrayDisplay[1] = 'N' ;
+		arrayDisplay[2] = 'N';
+		arrayDisplay[3] = contadorGlobal;
 
-        case STATE_IDLE:
-            // MCU en espera
-            break;
+	} else if (contadorGlobal >= 10 && contadorGlobal < 100) {
+		// Mostrar dos dígitos
+		int unidades = contadorGlobal % 10;
+		int decenas = contadorGlobal / 10;
+		arrayDisplay[0] = 'N';
+		arrayDisplay[1] = 'N';
+		arrayDisplay[2] = decenas;
+		arrayDisplay[3] = unidades;
 
-        case STATE_BLINKY:
-            GPIOxTooglePin(&handlerStateLed);
-            currentState = STATE_IDLE;
-            break;
 
-        case STATE_RGB:
-            // Avanza al siguiente color
-            currentColor++;
-            if (currentColor > COLOR_WHITE){
-                currentColor = COLOR_OFF;
-            }
+	} else if (contadorGlobal >= 100 && contadorGlobal < 1000) {
+		// Mostrar tres dígitos
+		int unidades = contadorGlobal % 10;
+		int decenas = (contadorGlobal / 10) % 10;
+		int centenas = contadorGlobal / 100;
+		arrayDisplay[0] = 'N';
+		arrayDisplay[1] = centenas;
+		arrayDisplay[2] = decenas;
+		arrayDisplay[3] = unidades;
 
-            // Configura los LEDs según el color actual
-            switch(currentColor){
-                case COLOR_RED:
-                    GPIO_WritePin(&handlerLedRed, SET);
-                    GPIO_WritePin(&handlerLedGreen, RESET);
-                    GPIO_WritePin(&handlerLedBlue, RESET);
-                    GPIO_WritePin(&handlerDigit4, SET);
-                    GPIO_WritePin(&handlerDigit3, SET);
-                    GPIO_WritePin(&handlerDigit2, SET);
-                    GPIO_WritePin(&handlerDigit1, SET);
-                    break;
-                case COLOR_GREEN:
-                    GPIO_WritePin(&handlerLedRed, RESET);
-                    GPIO_WritePin(&handlerLedGreen, SET);
-                    GPIO_WritePin(&handlerLedBlue, RESET);
-                    GPIO_WritePin(&handlerDigit4, RESET);
-                    GPIO_WritePin(&handlerDigit3, RESET);
-                    GPIO_WritePin(&handlerDigit2, RESET);
-                    GPIO_WritePin(&handlerDigit1, RESET);
-                    break;
-                case COLOR_BLUE:
-                    GPIO_WritePin(&handlerLedRed, RESET);
-                    GPIO_WritePin(&handlerLedGreen, RESET);
-                    GPIO_WritePin(&handlerLedBlue, SET);
-                    break;
-                case COLOR_CYAN:
-                    GPIO_WritePin(&handlerLedRed, RESET);
-                    GPIO_WritePin(&handlerLedGreen, SET);
-                    GPIO_WritePin(&handlerLedBlue, SET);
-                    break;
-                case COLOR_MAGENTA:
-                    GPIO_WritePin(&handlerLedRed, SET);
-                    GPIO_WritePin(&handlerLedGreen, RESET);
-                    GPIO_WritePin(&handlerLedBlue, SET);
-                    break;
-                case COLOR_YELLOW:
-                    GPIO_WritePin(&handlerLedRed, SET);
-                    GPIO_WritePin(&handlerLedGreen, SET);
-                    GPIO_WritePin(&handlerLedBlue, RESET);
-                    break;
-                case COLOR_WHITE:
-                    GPIO_WritePin(&handlerLedRed, SET);
-                    GPIO_WritePin(&handlerLedGreen, SET);
-                    GPIO_WritePin(&handlerLedBlue, SET);
-                    break;
-                case COLOR_OFF:
-                default:
-                    GPIO_WritePin(&handlerLedRed, RESET);
-                    GPIO_WritePin(&handlerLedGreen, RESET);
-                    GPIO_WritePin(&handlerLedBlue, RESET);
-                    break  ;
-            }
 
-            // Vuelve a estado IDLE
-            currentState = STATE_IDLE;
-            break;
+	} else if (contadorGlobal >= 1000 && contadorGlobal < 10000) {
+		// Mostrar cuatro dígitos
+		int unidades = contadorGlobal % 10;
+		int decenas = (contadorGlobal / 10) % 10;
+		int centenas = (contadorGlobal / 100) % 10;
+		int millares = contadorGlobal / 1000;
+		arrayDisplay[0] = millares;
+		arrayDisplay[1] = centenas;
+		arrayDisplay[2] = decenas;
+		arrayDisplay[3] = unidades;
 
-        default:
-            currentState = STATE_IDLE;
-            break;
-    }
+	}
 }
 
+void writeSegments(uint8_t number){
 
-//-------------------------------------------------------Main-----------------------------------------------------
-void writeSegments(int number){
     switch (number) {
 
     case 0:
@@ -468,7 +427,7 @@ void writeSegments(int number){
         GPIO_WritePin(&handlerPinLedF, SET);
         GPIO_WritePin(&handlerPinLedG, SET);
         GPIO_WritePin(&handlerPunto, SET);
-        break;
+        break;	GPIO_Config(&handlerEncoderDT);
 
     case 2:
         GPIO_WritePin(&handlerPinLedA, RESET);
@@ -558,17 +517,6 @@ void writeSegments(int number){
         GPIO_WritePin(&handlerPunto, SET);
         break;
 
-    case 'O':
-        GPIO_WritePin(&handlerPinLedA, SET);
-        GPIO_WritePin(&handlerPinLedB, SET);
-        GPIO_WritePin(&handlerPinLedC, SET);
-        GPIO_WritePin(&handlerPinLedD, SET);
-        GPIO_WritePin(&handlerPinLedE, SET);
-        GPIO_WritePin(&handlerPinLedF, SET);
-        GPIO_WritePin(&handlerPinLedG, SET);
-        GPIO_WritePin(&handlerPunto, SET);
-        break;
-
     case 'E':
         GPIO_WritePin(&handlerPinLedA, RESET);
         GPIO_WritePin(&handlerPinLedB, SET);
@@ -577,14 +525,195 @@ void writeSegments(int number){
         GPIO_WritePin(&handlerPinLedE, RESET);
         GPIO_WritePin(&handlerPinLedF, RESET);
         GPIO_WritePin(&handlerPinLedG, RESET);
-        GPIO_WritePin(&handlerPunto, RESET);
+        GPIO_WritePin(&handlerPunto,   RESET);
         break;
+
+    case 'N':
+    	GPIO_WritePin(&handlerPinLedA, SET);
+		GPIO_WritePin(&handlerPinLedB, SET);
+		GPIO_WritePin(&handlerPinLedC, SET);
+		GPIO_WritePin(&handlerPinLedD, SET);
+		GPIO_WritePin(&handlerPinLedE, SET);
+		GPIO_WritePin(&handlerPinLedF, SET);
+		GPIO_WritePin(&handlerPinLedG, SET);
+		GPIO_WritePin(&handlerPunto,   SET);
 
     default:
         // Opcional: Manejar otros casos si es necesario.
         break;
     }
 }
+
+// Implementación de la FSM
+void fsm(void) {
+	switch (currentState) {
+
+        case STATE_IDLE:
+            // MCU en espera
+            break;
+
+        case STATE_BLINKY:	GPIO_Config(&handlerEncoderDT);
+            GPIOxTooglePin(&handlerStateLed);
+            currentState = STATE_IDLE;
+            break;
+
+        case STATE_RGB:
+            // Avanza al siguiente color
+        	writeSegments(0);
+            currentColor++;
+            if (currentColor > COLOR_WHITE){
+                currentColor = COLOR_OFF;
+            }
+
+            // Configura los LEDs según el color actual
+            switch(currentColor){
+                case COLOR_RED:
+                    GPIO_WritePin(&handlerLedRed, SET);
+                    GPIO_WritePin(&handlerLedGreen, RESET);
+                    GPIO_WritePin(&handlerLedBlue, RESET);
+                    GPIO_WritePin(&handlerDigit4, SET);
+                    GPIO_WritePin(&handlerDigit3, SET);
+                    GPIO_WritePin(&handlerDigit2, SET);
+                    GPIO_WritePin(&handlerDigit1, SET);
+                    break;
+                case COLOR_GREEN:
+                    GPIO_WritePin(&handlerLedRed, RESET);
+                    GPIO_WritePin(&handlerLedGreen, SET);
+                    GPIO_WritePin(&handlerLedBlue, RESET);
+                    GPIO_WritePin(&handlerDigit4, RESET);
+                    GPIO_WritePin(&handlerDigit3, RESET);
+                    GPIO_WritePin(&handlerDigit2, RESET);
+                    GPIO_WritePin(&handlerDigit1, RESET);
+                    break;
+                case COLOR_BLUE:
+                    GPIO_WritePin(&handlerLedRed, RESET);
+                    GPIO_WritePin(&handlerLedGreen, RESET);
+                    GPIO_WritePin(&handlerLedBlue, SET);
+                    break;
+                case COLOR_CYAN:
+                    GPIO_WritePin(&handlerLedRed, RESET);
+                    GPIO_WritePin(&handlerLedGreen, SET);
+                    GPIO_WritePin(&handlerLedBlue, SET);
+                    break;
+                case COLOR_MAGENTA:
+                    GPIO_WritePin(&handlerLedRed, SET);
+                    GPIO_WritePin(&handlerLedGreen, RESET);
+                    GPIO_WritePin(&handlerLedBlue, SET);
+                    break;
+                case COLOR_YELLOW:
+                    GPIO_WritePin(&handlerLedRed, SET);
+                    GPIO_WritePin(&handlerLedGreen, SET);
+                    GPIO_WritePin(&handlerLedBlue, RESET);
+                    break;
+                case COLOR_WHITE:
+                    GPIO_WritePin(&handlerLedRed, SET);
+                    GPIO_WritePin(&handlerLedGreen, SET);
+                    GPIO_WritePin(&handlerLedBlue, SET);
+                    break;
+                case COLOR_OFF:
+                default:
+                    GPIO_WritePin(&handlerLedRed, RESET);
+                    GPIO_WritePin(&handlerLedGreen, RESET);
+                    GPIO_WritePin(&handlerLedBlue, RESET);
+                    break  ;
+            }
+
+            // Vuelve a estado IDLE
+            currentState = STATE_IDLE;
+            break;
+
+        default:
+            currentState = STATE_IDLE;
+            break;
+    }
+}
+
+
+
+void write_digit(int digit, uint8_t state){
+
+	switch (digit) {
+	case 1:
+		GPIO_WritePin(&handlerDigit1, state);
+	case 2:
+		GPIO_WritePin(&handlerDigit2, state);
+	case 3:
+		GPIO_WritePin(&handlerDigit3, state);
+	case 4:
+		GPIO_WritePin(&handlerDigit4, state);
+	default:
+		break;
+
+	}
+
+
+}
+
+
+/*void write_display(void){
+	if (contadorGlobal >= 0 && contadorGlobal < 10) {
+	    // Mostrar solo un dígito
+	    write_digit(1, RESET);
+	    write_digit(2, SET);
+	    write_digit(3, SET);
+	    write_digit(4, SET);
+	    writeSegments(contadorGlobal);
+
+	} else if (contadorGlobal >= 10 && contadorGlobal < 100) {
+	    // Mostrar dos dígitos
+	    int unidades = contadorGlobal % 10;
+	    int decenas = contadorGlobal / 10;
+
+	    write_digit(1, RESET);
+	    writeSegments(unidades);
+
+	    write_digit(2, RESET);
+	    writeSegments(decenas);
+
+	    write_digit(3, SET);
+	    write_digit(4, SET);
+
+	} else if (contadorGlobal >= 100 && contadorGlobal < 1000) {
+	    // Mostrar tres dígitos
+	    int unidades = contadorGlobal % 10;
+	    int decenas = (contadorGlobal / 10) % 10;
+	    int centenas = contadorGlobal / 100;
+
+	    write_digit(1, RESET);
+	    writeSegments(unidades);
+
+	    write_digit(2, RESET);
+	    writeSegments(decenas);
+
+	    write_digit(3, RESET);
+	    writeSegments(centenas);
+
+	    write_digit(4, SET);
+
+	} else if (contadorGlobal >= 1000 && contadorGlobal < 10000) {
+	    // Mostrar cuatro dígitos
+	    int unidades = contadorGlobal % 10;
+	    int decenas = (contadorGlobal / 10) % 10;
+	    int centenas = (contadorGlobal / 100) % 10;
+	    int millares = contadorGlobal / 1000;
+
+	    write_digit(1, RESET);
+	    writeSegments(unidades);
+
+	    write_digit(2, RESET);
+	    writeSegments(decenas);
+
+	    write_digit(3, RESET);
+	    writeSegments(centenas);
+
+	    write_digit(4, RESET);
+	    writeSegments(millares);
+	}
+
+
+}*/
+
+//-------------------------------------------------------Main-----------------------------------------------------
 
 
 
@@ -604,9 +733,13 @@ int main(void){
 	initSystem();
 
 
+
 	while(1){
 		fsm(); // Llamada a la FSM
-		writeSegments(8);
+		buildArrayDisplay();
+
+
+
 	}
 	return 0;
 }
@@ -620,17 +753,61 @@ int main(void){
 
 //-------------------------------------------------------Callbacks-------------------------------------------------
 
+uint8_t basic_timer_amount = 0;
 
+void BasicTimer3_Callback(void){
 
+	basic_timer_amount++;
 
-void BasicTimer2_Callback(void){
+	switch (basic_timer_amount)
+	{
+		case 1:
+		{
+			write_digit(1, RESET);
+			write_digit(2, SET);
+			write_digit(3, SET);
+			write_digit(4, SET);
+			writeSegments(arrayDisplay[3]);
+			break;
+		}
+		case 2:
+		{
+			write_digit(1, SET);
+			write_digit(2, RESET);
+			write_digit(3, SET);
+			write_digit(4, SET);
+			writeSegments(arrayDisplay[2]);
+			break;
+		}
+		case 3:
+		{
+			write_digit(1, SET);
+			write_digit(2, SET);
+			write_digit(3, RESET);
+			write_digit(4, SET);
+			writeSegments(arrayDisplay[1]);
+			break;
+		}
 
-	 currentState = STATE_BLINKY;
+		case 4:
+		{
+			write_digit(1, SET);
+			write_digit(2, SET);
+			write_digit(3, SET);
+			write_digit(4, RESET);
+			writeSegments(arrayDisplay[0]);
+			break;
+		}
+		default:
+			break;
+	}
+
+	if (basic_timer_amount >= 4)
+		basic_timer_amount = 0;
 
 }
 
-
-void BasicTimer3_Callback(void){
+void BasicTimer2_Callback(void){
 
 	 currentState = STATE_BLINKY;
 
@@ -648,7 +825,61 @@ void callback_extInt10(void){
 
     // Cambia el estado para que la FSM actualice el color
     currentState = STATE_RGB;
+
+
+
 }
+
+
+
+
+
+void callback_extInt0(void){
+
+	uint8_t currDataState;
+	uint8_t currClockState;
+
+	currDataState = GPIO_ReadPin(&handlerEncoderDT);
+	currClockState = GPIO_ReadPin(&handlerEncoderCLK);
+
+	if(currDataState == SET ){
+
+		if(currClockState == SET){
+			contadorGlobal++;
+			if(contadorGlobal > 4095){
+				contadorGlobal = 0;
+			}
+
+		}
+		else{
+
+			contadorGlobal--;
+			if(contadorGlobal < 0){
+				contadorGlobal = 4095;
+			}
+		}
+
+	}
+
+	/*if (count < 10) {
+		unidades = count;
+		decenas = RESET;
+	}
+	else {
+		 numeros(0);
+		// Si el contador es mayor o igual a 10, se escriben ambos dígitos
+
+
+		decenas = count / 10;
+		unidades = count % 10;
+	}*/
+
+
+}
+
+
+
+
 
 
 
