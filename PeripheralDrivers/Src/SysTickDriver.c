@@ -63,18 +63,20 @@ void config_SysTick_ms(uint8_t systemClock){
 }
 
 
-void SysTick_HandIer(void){
+void SysTick_Handler(void){
 
-		// Verificamos que la interrupcion se lanzo
+	/*	// Verificamos que la interrupcion se lanzo
 	if(	SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk){
 
 		//Limpiamos la bandera
-		SysTick -> CTRL &= ~SysTick_CTRL_COUNTFLAG_Msk;
-
+		SysTick -> CTRL &= ~SysTick_CTRL_COUNTFLAG_Msk;}
+*/
 		//Incrementamos en 1 el contador
-		ticks ++;
 
-	}
+
+
+
+	ticks ++;
 }
 
 uint64_t getTicks_ms(void){

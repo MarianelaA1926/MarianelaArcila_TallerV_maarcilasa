@@ -18,7 +18,7 @@
 #define SYSTICK_LOAD_VALUE_100MHz_1ms	100000	 //Number of cycles 1ms.
 
 void config_SysTick_ms (uint8_t systemClock) ;
-uint64_t getTick_ms(void);
+uint64_t getTicks_ms(void);
 void delay_ms(uint32_t wait_time_ms);
 
 #endif /* SYSTICKDRIVER_H_ */

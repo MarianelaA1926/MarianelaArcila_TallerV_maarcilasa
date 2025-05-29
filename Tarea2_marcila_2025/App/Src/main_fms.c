@@ -18,12 +18,14 @@
  */
 
 #include <stdint.h>
+
 #include <stm32f4xx.h>
 #include "GPIOxDriver.h"
 #include "BasicTimer.h"
 #include "ExtiDriver.h"
 #include "stm32_assert.h"
-
+#include "USARTxDriver.h"
+#include "SysTickDriver.h"
 //-------------------------------------------------------Led State---------------------------------------------
 // Status LED control variables
 GPIO_Handler_t handlerStateLed = {0};
@@ -72,6 +74,17 @@ EXTI_Config_t handlerExtiEncoderDT = {0};
 
 int16_t contadorGlobal = 0;
 uint8_t arrayDisplay[4] = {'N', 'N', 'N', 'N'};
+uint8_t basic_timer_amount = 0;
+
+
+//-----------------------------------IMPRIMIR EN CONSOLA----------------------------
+GPIO_Handler_t handlerPinTx		= {0};
+GPIO_Handler_t handlerPinRx		= {0};
+
+// Utiliza la conexion USB
+USART_Handler_t handlerUsart2 = {0};
+char tiempoMs = {0};
+
 //-------------------------------------------------------FSM----------------------------------------------------
 
 // Definición de los estados de la FSM
@@ -114,18 +127,6 @@ void initSystem(void){
 	handlerStateLed.GPIO_PinConfig.GPIO_PinSpeed = 						GPIO_OSPEED_FAST;
 
 	GPIO_Config(&handlerStateLed);
-
-	// We configure TIMER 2 as the counter for the stateLed
-	handlerTimerStateLed.ptrTIMx = 										TIM2;
-	handlerTimerStateLed.TIMx_Config.TIMx_mode = 						BTIMER_MODE_UP;
-	handlerTimerStateLed.TIMx_Config.TIMx_speed= 						BTIMER_SPEED_1ms;
-	handlerTimerStateLed.TIMx_Config.TIMx_period = 						250;
-	handlerTimerStateLed.TIMx_Config.TIMx_interrupEnable=				BTIMER_ENABLE;
-
-	BasicTimer_Config(&handlerTimerStateLed);
-
-	// We activate the TIM2
-	starTimer(&handlerTimerStateLed);
 
 
 
@@ -352,6 +353,54 @@ void initSystem(void){
 	BasicTimer_Config(&handlerTimerSG);
 	// We activate the TIM3
 	starTimer(&handlerTimerSG);
+
+
+//------------------------------------------------------------Imprimir consola-------------------------------------
+	/* Configurando los pines sobre los que funciona el USART2 (TX) */
+	handlerPinTx.pGPIOx 							= GPIOA;
+	handlerPinTx.GPIO_PinConfig.GPIO_PinNumber		= PIN_2;
+	handlerPinTx.GPIO_PinConfig.GPIO_PinMode		= GPIO_MODE_ALTFN;
+	handlerPinTx.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
+	handlerPinTx.GPIO_PinConfig.GPIO_PinSpeed		= GPIO_OSPEED_FAST;
+	handlerPinTx.GPIO_PinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
+	handlerPinTx.GPIO_PinConfig.GPIO_PinAltFunMode	= AF7;
+	GPIO_Config(&handlerPinTx);
+
+	/* Configurando los pines sobre los que funciona el USART2 (RX) */
+	handlerPinRx.pGPIOx 							= GPIOA;
+	handlerPinRx.GPIO_PinConfig.GPIO_PinNumber		= PIN_3;
+	handlerPinRx.GPIO_PinConfig.GPIO_PinMode		= GPIO_MODE_ALTFN;
+	handlerPinRx.GPIO_PinConfig.GPIO_PinOPType		= GPIO_OTYPE_PUSHPULL;
+	handlerPinRx.GPIO_PinConfig.GPIO_PinPuPdControl	= GPIO_PUPDR_NOTHING;
+	handlerPinRx.GPIO_PinConfig.GPIO_PinSpeed		= GPIO_OSPEED_FAST;
+	handlerPinRx.GPIO_PinConfig.GPIO_PinAltFunMode	= AF7;
+	GPIO_Config(&handlerPinRx);
+
+	// Configurando la comunicación serial (Cable verde es TX, Cable Blanco es RX)
+	handlerUsart2.ptrUSARTx 					= USART2;
+	handlerUsart2.USART_Config.USART_baudrate	= USART_BAUDRATE_115200;
+	handlerUsart2.USART_Config.USART_datasize	= USART_DATASIZE_8BIT;
+	handlerUsart2.USART_Config.USART_parity		= USART_PARITY_NONE;
+	handlerUsart2.USART_Config.USART_stopbits	= USART_STOPBIT_1;
+	handlerUsart2.USART_Config.USART_mode		= USART_MODE_RXTX;
+	handlerUsart2.USART_Config.USART_enableIntRx = USART_RX_INTERRUP_ENABLE ;
+
+	// Cargamos la configuración del USART
+	USART_Config(&handlerUsart2);
+
+
+	// We configure TIMER 2 as the counter for the stateLed
+	handlerTimerStateLed.ptrTIMx = 										TIM2;
+	handlerTimerStateLed.TIMx_Config.TIMx_mode = 						BTIMER_MODE_UP;
+	handlerTimerStateLed.TIMx_Config.TIMx_speed= 						BTIMER_SPEED_1ms;
+	handlerTimerStateLed.TIMx_Config.TIMx_period = 						250;
+	handlerTimerStateLed.TIMx_Config.TIMx_interrupEnable=				BTIMER_ENABLE;
+
+	BasicTimer_Config(&handlerTimerStateLed);
+
+	// We activate the TIM2
+	starTimer(&handlerTimerStateLed);
+
 
 
 }
@@ -648,98 +697,47 @@ void write_digit(int digit, uint8_t state){
 
 
 }
-
-
-/*void write_display(void){
-	if (contadorGlobal >= 0 && contadorGlobal < 10) {
-	    // Mostrar solo un dígito
-	    write_digit(1, RESET);
-	    write_digit(2, SET);
-	    write_digit(3, SET);
-	    write_digit(4, SET);
-	    writeSegments(contadorGlobal);
-
-	} else if (contadorGlobal >= 10 && contadorGlobal < 100) {
-	    // Mostrar dos dígitos
-	    int unidades = contadorGlobal % 10;
-	    int decenas = contadorGlobal / 10;
-
-	    write_digit(1, RESET);
-	    writeSegments(unidades);
-
-	    write_digit(2, RESET);
-	    writeSegments(decenas);
-
-	    write_digit(3, SET);
-	    write_digit(4, SET);
-
-	} else if (contadorGlobal >= 100 && contadorGlobal < 1000) {
-	    // Mostrar tres dígitos
-	    int unidades = contadorGlobal % 10;
-	    int decenas = (contadorGlobal / 10) % 10;
-	    int centenas = contadorGlobal / 100;
-
-	    write_digit(1, RESET);
-	    writeSegments(unidades);
-
-	    write_digit(2, RESET);
-	    writeSegments(decenas);
-
-	    write_digit(3, RESET);
-	    writeSegments(centenas);
-
-	    write_digit(4, SET);
-
-	} else if (contadorGlobal >= 1000 && contadorGlobal < 10000) {
-	    // Mostrar cuatro dígitos
-	    int unidades = contadorGlobal % 10;
-	    int decenas = (contadorGlobal / 10) % 10;
-	    int centenas = (contadorGlobal / 100) % 10;
-	    int millares = contadorGlobal / 1000;
-
-	    write_digit(1, RESET);
-	    writeSegments(unidades);
-
-	    write_digit(2, RESET);
-	    writeSegments(decenas);
-
-	    write_digit(3, RESET);
-	    writeSegments(centenas);
-
-	    write_digit(4, RESET);
-	    writeSegments(millares);
-	}
-
-
-}*/
-
 //-------------------------------------------------------Main-----------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
 int main(void){
 	initSystem();
 
+	//Se configura a 16MHz
+	config_SysTick_ms(0);
 
+/*
+	if(GPIO_ReadPin(&handlerButtonSW) == 0){
+		char buffer[64];
+
+		writeChar(&handlerUsart2, getTicks_ms());
+
+		// Delay para rebote (¡opcional!)
+		for(volatile int i=0; i<50000; i++);
+	}*/
 
 	while(1){
 		fsm(); // Llamada a la FSM
 		buildArrayDisplay();
+/*		//writeChar(&handlerUsart2,tiempoMs );
+		if(GPIO_ReadPin(&handlerButtonSW) == 0){
+			tiempoMs = getTicks_ms();
+			writeChar(&handlerUsart2, getTicks_ms());
 
+			// Delay para rebote (¡opcional!)
+			for(volatile int i=0; i<50000; i++);
+		}*/
+		if(GPIO_ReadPin(&handlerButtonSW) == 0){
+			uint16_t tiempoMs = (uint16_t)getTicks_ms()/1000;
 
+		    char buffer[128];
+		    sprintf(buffer, "Tiempo: %u m\n", tiempoMs);
+		    writeMsg(&handlerUsart2, buffer);
 
+		    // Delay para rebote (¡opcional!)
+		    for(volatile int i=0; i<50000; i++);
+		}
 	}
 	return 0;
 }
@@ -753,7 +751,8 @@ int main(void){
 
 //-------------------------------------------------------Callbacks-------------------------------------------------
 
-uint8_t basic_timer_amount = 0;
+
+
 
 void BasicTimer3_Callback(void){
 
@@ -807,6 +806,7 @@ void BasicTimer3_Callback(void){
 
 }
 
+
 void BasicTimer2_Callback(void){
 
 	 currentState = STATE_BLINKY;
@@ -815,9 +815,11 @@ void BasicTimer2_Callback(void){
 
 
 
-
-
-
+/*
+void SysTick_Handler(void) {
+    tiempoMs++;
+}
+*/
 void callback_extInt10(void){
 
     // delay por rebote (opcional)
@@ -825,15 +827,9 @@ void callback_extInt10(void){
 
     // Cambia el estado para que la FSM actualice el color
     currentState = STATE_RGB;
-
-
+    // Handler de la interrupción SysTick
 
 }
-
-
-
-
-
 void callback_extInt0(void){
 
 	uint8_t currDataState;
@@ -861,28 +857,7 @@ void callback_extInt0(void){
 
 	}
 
-	/*if (count < 10) {
-		unidades = count;
-		decenas = RESET;
-	}
-	else {
-		 numeros(0);
-		// Si el contador es mayor o igual a 10, se escriben ambos dígitos
-
-
-		decenas = count / 10;
-		unidades = count % 10;
-	}*/
-
-
 }
-
-
-
-
-
-
-
 
 
 
@@ -899,11 +874,10 @@ void callback_extInt8(void){
         for (volatile int i=0; i<100000; i++);
 
         NVIC_SystemReset();
+
+
     }
 }
-
-
-
 
 
 
