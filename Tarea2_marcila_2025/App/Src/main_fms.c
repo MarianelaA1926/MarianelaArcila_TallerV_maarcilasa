@@ -18,7 +18,7 @@
  */
 
 #include <stdint.h>
-
+#include <stdio.h>
 #include <stm32f4xx.h>
 #include "GPIOxDriver.h"
 #include "BasicTimer.h"
@@ -26,7 +26,9 @@
 #include "stm32_assert.h"
 #include "USARTxDriver.h"
 #include "SysTickDriver.h"
-//-------------------------------------------------------Led State---------------------------------------------
+#include "AdcDriver.h"
+
+//-------------------------------------------------Led State---------------------------------------------//
 // Status LED control variables
 GPIO_Handler_t handlerStateLed = {0};
 BasicTimer_Handler_t handlerTimerStateLed = {0};
@@ -75,7 +77,21 @@ EXTI_Config_t handlerExtiEncoderDT = {0};
 int16_t contadorGlobal = 0;
 uint8_t arrayDisplay[4] = {'N', 'N', 'N', 'N'};
 uint8_t basic_timer_amount = 0;
+//----------------------------------------ADC------------------------------------------------------------------------------
+ADC_Config_t adcConfig = {0};
 
+GPIO_Handler_t handlerPinAdc = {0};
+
+// --- Variables globales del sistema ---
+uint32_t current_sampling_freq = 44100;      // Frecuencia de muestreo
+uint16_t current_fft_size = 1024;            // Tamaño FFT
+char tx_buffer[256];                         // Buffer de transmisión por UART
+
+#define FFT_MAX_SIZE 2048
+
+// Buffers de señal
+uint16_t adcRawData_data[FFT_MAX_SIZE];           // Señal muestreada
+uint16_t fftMagnitudes[FFT_MAX_SIZE / 2];    // Magnitudes de la FFT (sin float)
 
 //-----------------------------------IMPRIMIR EN CONSOLA----------------------------
 GPIO_Handler_t handlerPinTx		= {0};
@@ -84,6 +100,20 @@ GPIO_Handler_t handlerPinRx		= {0};
 // Utiliza la conexion USB
 USART_Handler_t handlerUsart2 = {0};
 char tiempoMs = {0};
+
+#define MAX_BUFFER_SIZE 32
+#define BTIMER_SPEED_1us			16
+
+char rxBuffer[MAX_BUFFER_SIZE];
+uint8_t rxIndex = 0;
+uint8_t commandReady = 0;
+//----------------------------Variables  comandos usart---------------------------------------------
+char rxBuffer[MAX_BUFFER_SIZE];
+
+float frecuencia = 0;  // Hz inicial → 250 ms
+uint8_t ledEnabled = 1;  // Controla si el parpadeo está activo o no
+
+
 
 //-------------------------------------------------------FSM----------------------------------------------------
 
@@ -401,6 +431,30 @@ void initSystem(void){
 	// We activate the TIM2
 	starTimer(&handlerTimerStateLed);
 
+//--------------------------------------------------------------ADC-------------------------------------------------------
+
+
+	adcConfig.channel = 10;  // Por ejemplo, canal 10 → PC0
+	adcConfig.resolution = ADC_RESOLUTION_12_BIT;
+	adcConfig.dataAlignment = ADC_ALIGNMENT_RIGHT;
+	// ... otras configuraciones ...
+	adc_Config(&adcConfig);  // Llama a tu driver
+
+
+
+
+	handlerPinAdc.pGPIOx = GPIOC;
+	handlerPinAdc.GPIO_PinConfig.GPIO_PinNumber = PIN_0;
+	handlerPinAdc.GPIO_PinConfig.GPIO_PinMode = GPIO_MODE_ANALOG;
+	handlerPinAdc.GPIO_PinConfig.GPIO_PinOPType = GPIO_OTYPE_PUSHPULL;    // Opcional
+	handlerPinAdc.GPIO_PinConfig.GPIO_PinPuPdControl = GPIO_PUPDR_NOTHING;
+	handlerPinAdc.GPIO_PinConfig.GPIO_PinSpeed = GPIO_OSPEED_LOW;         // No importa realmente
+	handlerPinAdc.GPIO_PinConfig.GPIO_PinAltFunMode = 0;                  // No aplica
+
+	GPIO_Config(&handlerPinAdc);
+
+//_--------------------------------------------------------_ADC-------------------------------------------
+
 
 
 }
@@ -700,6 +754,206 @@ void write_digit(int digit, uint8_t state){
 //-------------------------------------------------------Main-----------------------------------------------------
 
 
+void processCommand(void){
+    if (!commandReady) return;
+
+    commandReady = 0;
+
+    if (strcmp(rxBuffer, "hola") == 0){
+        writeMsg(&handlerUsart2, "hola marianela\r\n");
+
+
+    } else if (strcmp(rxBuffer, "led on") == 0) {
+        ledEnabled = 1;
+        GPIO_WritePin(&handlerLedRed, SET);
+        GPIO_WritePin(&handlerLedGreen, SET);
+        GPIO_WritePin(&handlerLedBlue, SET);
+
+        writeMsg(&handlerUsart2, "LED activado\r\n");
+    } else if (strcmp(rxBuffer, "led off") == 0) {
+        ledEnabled = 0;
+        GPIO_WritePin(&handlerLedRed, RESET);
+        GPIO_WritePin(&handlerLedGreen, RESET);
+        GPIO_WritePin(&handlerLedBlue, RESET);   // Apaga el LED
+        writeMsg(&handlerUsart2, "LED desactivado\r\n");
+    }
+    else if (strncmp(rxBuffer, "period ", 7) == 0) {
+        uint16_t periodo = atoi(&rxBuffer[7]);
+
+        if (periodo >= 10 && periodo <= 10000) {  // entre 10ms (100Hz) y 10s (0.1Hz)
+            handlerTimerStateLed.TIMx_Config.TIMx_period = periodo;
+            BasicTimer_Config(&handlerTimerStateLed);
+            stopTimer(&handlerTimerStateLed); // Reinicio limpio
+            starTimer(&handlerTimerStateLed);
+
+            char msg[64];
+            sprintf(msg, "Periodo actualizado a %d ms\r\n", periodo);
+            writeMsg(&handlerUsart2, msg);
+        } else {
+            writeMsg(&handlerUsart2, "Periodo inválido (10 - 10000 ms)\r\n");
+        }
+
+
+    }
+
+    else if (strncmp(rxBuffer, "sample ", 7) == 0) {
+        uint32_t frecuencia = atoi(&rxBuffer[7]);
+
+        if (frecuencia == 44100 || frecuencia == 48000 ||
+            frecuencia == 96000 || frecuencia == 128000) {
+
+            uint16_t periodo = 1000000 / frecuencia;
+
+            // modificacion del  PSC para obtener valores cercanos (84 MHz → 1 µs)
+            handlerTimerStateLed.TIMx_Config.TIMx_speed  = 84;  // PSC = 84 → 1 µs
+            handlerTimerStateLed.TIMx_Config.TIMx_period = periodo;
+
+            stopTimer(&handlerTimerStateLed);
+            BasicTimer_Config(&handlerTimerStateLed);
+            starTimer(&handlerTimerStateLed);
+
+            char msg[64];
+            sprintf(msg, "Frecuencia configurada: %lu Hz (ARR = %u)\r\n", frecuencia, periodo);
+            writeMsg(&handlerUsart2, msg);
+        } else {
+            writeMsg(&handlerUsart2, "Frecuencia no soportada. Usa 44100, 48000, 96000 o 128000.\r\n");
+        }
+    }
+    // --- Comandos de la FFT ---
+    else if (strncmp(rxBuffer, "set fftsize ", 12) == 0) {
+        int nuevoTam = atoi(&rxBuffer[12]);
+        if (nuevoTam == 1024 || nuevoTam == 2048) {
+            current_fft_size = nuevoTam;
+            sprintf(tx_buffer, "Tamaño de FFT configurado a %d\r\n", nuevoTam);
+        } else {
+            sprintf(tx_buffer, "Tamaño inválido. Usa 1024 o 2048.\r\n");
+        }
+        writeMsg(&handlerUsart2, tx_buffer);
+    }
+
+    else if (strcmp(rxBuffer, "print raw") == 0) {
+        for (int i = 0; i < current_fft_size; i++) {
+            sprintf(tx_buffer, "%d\r\n", adcRawData_data[i]);
+            writeMsg(&handlerUsart2, tx_buffer);
+        }
+    }
+
+    else if (strcmp(rxBuffer, "print config") == 0) {
+        sprintf(tx_buffer, "Frecuencia de muestreo: %.0f Hz\r\nTamaño de FFT: %d\r\n",  current_sampling_freq, current_fft_size);
+        writeMsg(&handlerUsart2, tx_buffer);
+    }
+
+    else if (strcmp(rxBuffer, "print fft") == 0) {
+        for (int i = 0; i < current_fft_size / 2; i++) {
+            float freq = current_sampling_freq * i / current_fft_size;
+            sprintf(tx_buffer, "%.2f Hz : %.2f\r\n", freq, adcRawData_data[i]);
+            writeMsg(&handlerUsart2, tx_buffer);
+        }
+    }
+    else if (strncmp(rxBuffer, "set fftsize ", 12) == 0) {
+        int nuevoTam = atoi(&rxBuffer[12]);
+        if (nuevoTam == 1024 || nuevoTam == 2048) {
+            current_fft_size = nuevoTam;
+            sprintf(tx_buffer, "FFT configurada a %d\r\n", nuevoTam);
+        } else {
+            sprintf(tx_buffer, "Tamaño inválido. Usa 1024 o 2048.\r\n");
+        }
+        writeMsg(&handlerUsart2, tx_buffer);
+    }
+
+    else if (strcmp(rxBuffer, "print raw") == 0) {
+        for (int i = 0; i < current_fft_size; i++) {
+            sprintf(tx_buffer, "%u\r\n", adcRawData_data[i]);
+            writeMsg(&handlerUsart2, tx_buffer);
+        }
+    }
+
+    else if (strcmp(rxBuffer, "print config") == 0) {
+        sprintf(tx_buffer,
+            "Frecuencia muestreo: %lu Hz\r\nTamaño FFT: %u\r\n",
+            current_sampling_freq, current_fft_size);
+        writeMsg(&handlerUsart2, tx_buffer);
+    }
+
+    else if (strcmp(rxBuffer, "print fft") == 0) {
+        for (int i = 0; i < current_fft_size / 2; i++) {
+            uint32_t freq_scaled = (i * current_sampling_freq * 100) / current_fft_size;
+            sprintf(tx_buffer, "%lu.%02lu Hz : %u\r\n", freq_scaled / 100, freq_scaled % 100, fftMagnitudes[i]);
+            writeMsg(&handlerUsart2, tx_buffer);
+        }
+    }
+
+    else if (strcmp(rxBuffer, "print summary") == 0) {
+        uint32_t suma = 0;
+        for (int i = 0; i < current_fft_size; i++) suma += adcRawData_data[i];
+        uint32_t offset = suma / current_fft_size;
+
+        uint32_t magnitudMax = 0;
+        uint16_t indexMax = 1;
+        for (int i = 1; i < current_fft_size / 2; i++) {
+            if (fftMagnitudes[i] > magnitudMax) {
+                magnitudMax = fftMagnitudes[i];
+                indexMax = i;
+            }
+        }
+
+        uint32_t freq_scaled = (indexMax * current_sampling_freq * 100) / current_fft_size;
+
+        uint64_t potencia = 0;
+        for (int i = 0; i < current_fft_size / 2; i++) {
+            potencia += (uint32_t)(fftMagnitudes[i]) * (uint32_t)(fftMagnitudes[i]);
+        }
+
+        sprintf(tx_buffer,
+            "Frecuencia dominante: %lu.%02lu Hz\r\nPotencia: %llu\r\nOffset ADC: %lu\r\n",
+            freq_scaled / 100, freq_scaled % 100, potencia, offset);
+        writeMsg(&handlerUsart2, tx_buffer);
+    }
+
+    else if (strcmp(rxBuffer, "help") == 0) {
+        sprintf(tx_buffer,
+            "Comandos disponibles:\r\n"
+            "- hola\r\n"
+            "- led on / led off\r\n"
+            "- period <ms> / periodo <ms>\r\n"
+            "- sample <frecuencia>\r\n"
+            "- set fftsize <1024|2048>\r\n"
+            "- print raw\r\n"
+            "- print config\r\n"
+            "- print fft\r\n"
+            "- print summary\r\n"
+            "- help\r\n");
+        writeMsg(&handlerUsart2, tx_buffer);
+    }
+}
+
+void actualizarTimer(int freq){
+    if (freq < 1) freq = 1;
+    if (freq > 500) freq = 500;
+
+    uint16_t newPeriod = 1000 / freq;
+
+    // Detener el timer antes de reconfigurarlo
+    TIM2->CR1 &= ~TIM_CR1_CEN;
+    stopTimer(&handlerTimerStateLed);
+    handlerTimerStateLed.ptrTIMx = TIM2;
+    handlerTimerStateLed.TIMx_Config.TIMx_mode = BTIMER_MODE_UP;
+    handlerTimerStateLed.TIMx_Config.TIMx_speed = BTIMER_SPEED_1ms;
+    handlerTimerStateLed.TIMx_Config.TIMx_interrupEnable = BTIMER_ENABLE;
+    handlerTimerStateLed.TIMx_Config.TIMx_period = newPeriod;
+
+
+    BasicTimer_Config(&handlerTimerStateLed);
+
+    starTimer(&handlerTimerStateLed);         // ACTIVA el timer
+
+    // Imprimir por consola para confirmar
+    char msg[64];
+    sprintf(msg, "Frecuencia actualizada: %d Hz → periodo = %d ms\r\n", freq, newPeriod);
+    writeMsg(&handlerUsart2, msg);
+
+
+}
 
 int main(void){
 	initSystem();
@@ -716,9 +970,11 @@ int main(void){
 		// Delay para rebote (¡opcional!)
 		for(volatile int i=0; i<50000; i++);
 	}*/
+	writeMsg(&handlerUsart2, "STM32 listo para recibir\r\n");
 
 	while(1){
 		fsm(); // Llamada a la FSM
+		processCommand();
 		buildArrayDisplay();
 /*		//writeChar(&handlerUsart2,tiempoMs );
 		if(GPIO_ReadPin(&handlerButtonSW) == 0){
@@ -738,20 +994,131 @@ int main(void){
 		    // Delay para rebote (¡opcional!)
 		    for(volatile int i=0; i<50000; i++);
 		}
+
+
+
+
 	}
+
+
 	return 0;
 }
 
+#include "arm_math.h"      // Para las funciones de CMSIS-DSP
+#include "stm32f4xx_hal.h" // O la cabecera HAL de tu familia de STM32
+
+#include <stdio.h>         // Para la función sprintf()
+#include <string.h>        // Para la función strlen()
+
+//==============================================================================
+// PARÁMETROS DEL SISTEMA Y BUFFERS
+//==============================================================================
+
+// --- Parámetros de la Señal y la FFT ---
+#define SAMPLING_FREQ   44100.0f  // Frecuencia de muestreo en Hz
+#define FFT_SIZE        1024      // Tamaño de la FFT (debe ser potencia de 2)
+#define NUM_MAGNITUDES  (FFT_SIZE / 2) // Número de magnitudes de frecuencia (N/2)
+
+// --- Buffers para el procesamiento ---
+// Estos buffers deben ser globales o estáticos para no desbordar la pila.
+
+// Buffer de entrada: Llenado con datos del ADC ya convertidos a float32_t
+// Se asume que este buffer es llenado por otra parte de tu código.
+float32_t dsp_input_buffer[FFT_SIZE];
+
+// Buffer para el resultado intermedio de la FFT (formato complejo empaquetado)
+float32_t fft_output_buffer[FFT_SIZE];
+
+// Buffer para el resultado final de las magnitudes del espectro
+float32_t fft_magnitudes[NUM_MAGNITUDES];
+
+// Buffer para formatear la cadena de texto a enviar por UART
+char tx_buffer[100];
 
 
+// --- Recursos Externos (Handles) ---
+// Estas variables son creadas por STM32CubeIDE en 'main.c'
+// Las declaramos como 'extern' para que esta función pueda usarlas.
+extern UART_HandleTypeDef huart2;
+extern arm_rfft_fast_instance_f32 rfft_instance;
 
 
+/**
+ * @brief  Realiza el análisis FFT completo y transmite la frecuencia dominante por UART.
+ * @note   Esta función asume que:
+ *         1. La instancia 'rfft_instance' ha sido inicializada con arm_rfft_fast_init_f32().
+ *         2. El buffer 'dsp_input_buffer' contiene 'FFT_SIZE' muestras válidas.
+ *         3. El periférico USART2 (huart2) ha sido inicializado.
+ */
+void ejecutar_fft(void) {
 
+    // --- PASO 1: Ejecutar la Transformada Rápida de Fourier (FFT) ---
+    // Convierte los datos del dominio del tiempo al dominio de la frecuencia.
+    arm_rfft_fast_f32(
+        &rfft_instance,
+        dsp_input_buffer,
+        fft_output_buffer,
+        0 // '0' para FFT directa, '1' para FFT inversa
+    );
 
+    // --- PASO 2: Calcular las Magnitudes del Espectro ---
+    // Convierte el resultado complejo de la FFT en un espectro de potencia (magnitudes).
+    arm_cmplx_mag_f32(
+        fft_output_buffer,
+        fft_magnitudes,
+        NUM_MAGNITUDES
+    );
+
+    // --- PASO 3: Encontrar la Frecuencia Dominante ---
+    // Busca el valor máximo en el array de magnitudes para encontrar el pico de frecuencia.
+    float32_t max_magnitude;
+    uint32_t  max_index;
+
+    // Usamos arm_max_f32 para encontrar el pico.
+    // IMPORTANTE: Empezamos la búsqueda desde el índice 1 para ignorar la componente DC (0 Hz),
+    // que a menudo es muy grande y no es de interés para señales AC.
+    arm_max_f32(
+        &fft_magnitudes[1],     // Puntero al segundo elemento del array
+        NUM_MAGNITUDES - 1,     // Número de elementos a buscar
+        &max_magnitude,         // Variable para guardar el valor máximo
+        &max_index              // Variable para guardar el índice del máximo
+    );
+
+    // El índice devuelto es relativo al subarray que le pasamos, así que sumamos 1
+    // para obtener el índice correcto en el array 'fft_magnitudes' completo.
+    max_index = max_index + 1;
+
+    // --- PASO 4: Convertir el Índice a una Frecuencia Real (Hz) ---
+    float32_t frequency_resolution = SAMPLING_FREQ / FFT_SIZE;
+    float32_t dominant_frequency = max_index * frequency_resolution;
+
+    // --- PASO 5: Reportar el Resultado por UART ---
+    // Formatear la cadena de texto con el resultado
+    sprintf(tx_buffer, "Frecuencia Dominante: %.2f Hz (Magnitud: %.2f)\r\n", dominant_frequency, max_magnitude);
+
+    // Transmitir la cadena de texto usando las librerías HAL
+    HAL_UART_Transmit(
+        &huart2,
+        (uint8_t*)tx_buffer,
+        strlen(tx_buffer),
+        100 // Timeout de 100 ms
+    );
+}
 
 //-------------------------------------------------------Callbacks-------------------------------------------------
 
 
+void adcComplete_Callback(void) {
+    static uint16_t sampleIndex = 0;
+
+    adcRawData_data[sampleIndex++] = getADC();
+
+    if (sampleIndex >= current_fft_size) {
+        sampleIndex = 0;
+        ejecutarFFT();  // Llama tu función FFT
+        writeMsg(&handlerUsart2, "FFT ejecutada (por ADC)\r\n");
+    }
+}
 
 
 void BasicTimer3_Callback(void){
@@ -787,6 +1154,7 @@ void BasicTimer3_Callback(void){
 			writeSegments(arrayDisplay[1]);
 			break;
 		}
+
 
 		case 4:
 		{
@@ -830,6 +1198,28 @@ void callback_extInt10(void){
     // Handler de la interrupción SysTick
 
 }
+
+void usart2Rx_Callback(void)
+{
+    char byte = getRxData();
+
+
+    if (byte == '\r' || byte == '\n') {
+        rxBuffer[rxIndex] = '\0';
+        // Fin del string
+        commandReady = 1;
+        rxIndex = 0;
+
+    } else {
+        if (rxIndex < MAX_BUFFER_SIZE - 1) {
+            rxBuffer[rxIndex++] = byte;
+        } else {
+            rxIndex = 0;  // Evita desbordamiento
+        }
+    }
+
+}
+
 void callback_extInt0(void){
 
 	uint8_t currDataState;
