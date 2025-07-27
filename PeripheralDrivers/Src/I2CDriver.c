@@ -22,22 +22,22 @@ void i2c_config(I2C_Handler_t *ptrHandlerI2C){
 
 	/* 1 We activate the clock signal for the selected I2C mode. */
 
-	if(ptrHandlerI2C -> ptrI2Cx == I2C1){
-		RCC ->AHB1ENR |= RCC_APB1ENR_I2C1EN;
-	}
 
+	if(ptrHandlerI2C -> ptrI2Cx == I2C1){
+		RCC ->APB1ENR |= RCC_APB1ENR_I2C1EN;
+	}
 	else if(ptrHandlerI2C -> ptrI2Cx == I2C2){
-		RCC ->AHB1ENR |= RCC_APB1ENR_I2C1EN;
+		RCC ->APB1ENR |= RCC_APB1ENR_I2C2EN;
 	}
 	else if(ptrHandlerI2C -> ptrI2Cx == I2C3){
-		RCC ->AHB1ENR |= RCC_APB1ENR_I2C3EN;
-		}
+		RCC ->APB1ENR |= RCC_APB1ENR_I2C3EN;
+	}
 
-	/* 2. We restart the peripheral to ensure it starts in a known state. */
-	ptrHandlerI2C -> ptrI2Cx -> CR1 |= I2C_CR1_SWRST;
+
+	// Paso 2: reiniciar y luego salir del reset correctamente
+	ptrHandlerI2C->ptrI2Cx->CR1 |= I2C_CR1_SWRST;
 	__NOP();
-	ptrHandlerI2C -> ptrI2Cx -> CR2 &= ~ I2C_CR1_SWRST;
-
+	ptrHandlerI2C->ptrI2Cx->CR1 &= ~I2C_CR1_SWRST;  // ←
 	/*3 We indicate the speed of the main clock, which is the frequency
 	 * used by the peripheral to generate the clock signal for the I2C bus. */
 
@@ -101,33 +101,28 @@ void i2c_stopTransaction(I2C_Handler_t *ptrHandlerI2C){
 
 void i2c_startTransaction(I2C_Handler_t *ptrHandlerI2C){
 
-	/* 1. We verify that the line is not busy by checking the "busy" bit in the I2C_CR2 register.  */
-	while(!(ptrHandlerI2C ->ptrI2Cx ->SR2 & I2C_SR1_SB)){
-		__NOP();
-	}
-	/* 2. We generate the "Start" signal */
-	ptrHandlerI2C -> ptrI2Cx -> CR1 |= I2C_CR1_START;
+    // 1. Esperar a que el bus esté libre
+    while (ptrHandlerI2C->ptrI2Cx->SR2 & I2C_SR2_BUSY) {
+        __NOP();
+    }
 
-	/*2a While we wait for the "Start" event flag to rise, the value of SB is 0,
-	 * so the negation (!) is 1. */
-	while(!(ptrHandlerI2C -> ptrI2Cx -> SR1 & I2C_SR1_SB)){
-		__NOP();
-	}
+    // 2. Generar la condición START
+    ptrHandlerI2C->ptrI2Cx->CR1 |= I2C_CR1_START;
+
+    // 3. Esperar a que el bit SB se active (Start Bit)
+    while (!(ptrHandlerI2C->ptrI2Cx->SR1 & I2C_SR1_SB)) {
+        __NOP();
+    }
 
 }
 
 void i2c_reStartTrnasaction(I2C_Handler_t *ptrHandlerI2C){
 
-	/* 2. We generate the "Start" signal */
-	ptrHandlerI2C -> ptrI2Cx -> CR1 = I2C_CR1_START;
+    ptrHandlerI2C->ptrI2Cx->CR1 |= I2C_CR1_START;
 
-
-	/* 2a.While we wait for the "Start" event flag to rise,
-	 * the value of SB is 0, so the negation (!) is 1. */
-	while(!(ptrHandlerI2C -> ptrI2Cx -> SR1 & I2C_SR1_SB)){
-		__NOP();
-
-	}
+    while (!(ptrHandlerI2C->ptrI2Cx->SR1 & I2C_SR1_SB)) {
+        __NOP();
+    }
 }
 
 /*7a We activate the indication for no-ACK (indicating the Slave to terminate.) */
@@ -199,8 +194,8 @@ uint8_t i2c_readDataByte(I2C_Handler_t *ptrHandlerI2C){
 	while(!(ptrHandlerI2C -> ptrI2Cx ->SR1 & I2C_SR1_RXNE)){
 		__NOP();
 	}
-		ptrHandlerI2C -> dataI2C = ptrHandlerI2C ->ptrI2Cx ->DR;
-		return ptrHandlerI2C -> dataI2C;
+	ptrHandlerI2C -> dataI2C = ptrHandlerI2C ->ptrI2Cx ->DR;
+	return ptrHandlerI2C -> dataI2C;
 }
 
 
@@ -215,6 +210,7 @@ uint8_t i2c_readSingleRegister(I2C_Handler_t *ptrHandlerI2C, uint8_t regToRead){
 	/*2.We send the address of the slave and the indication to Write*/
 	i2c_sedSlaveAddressRW(ptrHandlerI2C,ptrHandlerI2C -> slaveAddress, I2C_WRITE_DATA);
 
+
 	/*3. We send the memory address that we want to read.*/
 	i2c_sedMemoryAddress(ptrHandlerI2C, regToRead);
 
@@ -224,14 +220,14 @@ uint8_t i2c_readSingleRegister(I2C_Handler_t *ptrHandlerI2C, uint8_t regToRead){
 	/*5.We send the address of the slave and the READ indication.*/
 	i2c_sedSlaveAddressRW(ptrHandlerI2C, ptrHandlerI2C -> slaveAddress, I2C_READ_DATA);
 
+	/* 8. We read the data sent by the slave. */
+	auxRead = i2c_readDataByte(ptrHandlerI2C);
+
 	/*6. We generate the NoAck condition, where the Master does not respond and the slave only sends 1 byte.*/
 	i2c_sedNoAck(ptrHandlerI2C);
 
 	/*7. We generate the Stop condition, so that the slave stops after sending 1 byte.*/
 	i2c_stopTransaction(ptrHandlerI2C);
-
-	/* 8. We read the data sent by the slave. */
-	auxRead = i2c_readDataByte(ptrHandlerI2C);
 
 	return auxRead;
 

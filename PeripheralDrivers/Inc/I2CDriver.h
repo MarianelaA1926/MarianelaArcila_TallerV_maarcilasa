@@ -41,6 +41,7 @@ typedef struct{
 	uint8_t 			modeI2C;
 	uint8_t 			dataI2C;
 
+
 }I2C_Handler_t;
 
 /*The public functions of the prototype.*/
