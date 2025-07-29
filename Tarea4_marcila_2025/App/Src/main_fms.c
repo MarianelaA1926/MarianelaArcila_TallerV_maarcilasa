@@ -28,6 +28,7 @@
 #include "AdcDriver.h"
 #include "I2CDriver.h"
 #include "LCD.h"
+#include "arm_math.h"
 
 //-------------------------------------------------Led State---------------------------------------------//
 // Status LED control variables
@@ -90,8 +91,21 @@ GPIO_Handler_t handlerI2cSCL = {0};
 GPIO_Handler_t handlerI2cSDA2 = {0};
 GPIO_Handler_t handlerI2cSCL2 = {0};
 LCD_Handler_t  lcd = {0};
+//----------------------------------------------FFT----------------------------------------------------------------------
 
-//-------------------------------------------------------FSM----------------------------------------------------
+//
+//#define FFT_SIZE       1024
+//#define SAMPLE_FREQ    1024  // 1 kHz si tu timer interrumpe cada 1 ms
+//
+//float32_t fft_input[FFT_SIZE];       // Señal del eje Z en float
+//float32_t fft_output[FFT_SIZE];      // Salida compleja intercalada
+//float32_t fft_magnitude[FFT_SIZE/2]; // Magnitud
+//uint16_t  sample_index = 0;
+//uint8_t   fft_ready = 0;
+//
+//arm_rfft_fast_instance_f32 fft_handler;
+//
+
 
 
 
@@ -175,8 +189,6 @@ void initSystem(void){
 	// We activate the TIM2
 	starTimer(&handlerTimerStateLed);
 
-	//Se configura a 16MHz
-	config_SysTick_ms(0);
 
 
 //-------------------------------------------I2C----------------------------------------------------------
@@ -269,7 +281,6 @@ int16_t promedio(struct Filtro *fil, int16_t value)
 int16_t readAccelX()
 {
 	int16_t scale = 39; //0.0039 * 10000
-
 	uint8_t rax_low  = i2c_readSingleRegister(&handlerAccelerometer, 0x32);
 	uint8_t rax_high = i2c_readSingleRegister(&handlerAccelerometer, 0x33);
 	int16_t rax = (int16_t)((rax_high << 8) | rax_low);
@@ -305,6 +316,7 @@ int16_t readAccelZ()
 
 
 
+
 int main(void){
 	initSystem();  // Configura todo, incluidos pines y acelerómetro
 
@@ -316,9 +328,20 @@ int main(void){
 		writeMsg(&handlerUsart2, "Dispositivo no encontrado\n");
 	}
 
+
+
+
 	char buffer[64];
 	sprintf(buffer, "DEVID = 0x%02X\r\n", dev_id);
 	writeMsg(&handlerUsart2, buffer);
+
+
+	float valor = 9.1;
+
+
+
+
+
 
 
 	while(1)
@@ -348,6 +371,32 @@ int main(void){
 		sprintf(buffer, "Accel Z: %5d", acel_z);
 		LCD_sendSTR(&lcd, buffer, lcd.slaveAddressLCD);
 
+
+//	    // Cuando se capturan 1024 muestras, hacemos la FFT
+//	    if (fft_ready) {
+//	        fft_ready = 0;
+//
+//	        arm_rfft_fast_init_f32(&fft_handler, FFT_SIZE);
+//	        arm_rfft_fast_f32(&fft_handler, fft_input, fft_output, 0);
+//
+//	        for (uint16_t i = 0; i < FFT_SIZE / 2; i++) {
+//	            float32_t real = fft_output[2*i];
+//	            float32_t imag = fft_output[2*i + 1];
+//	            fft_magnitude[i] = sqrtf(real*real + imag*imag);
+//	        }
+//
+//	        // Imprimir primeros 40 bins por USART (evita el bin 0: DC)
+//	        for (uint16_t i = 1; i < 40; i++) {
+//	            float freq = i * ((float)SAMPLE_FREQ / FFT_SIZE);
+//	            sprintf(buffer, "Freq %.0f Hz = Mag: %.2f\r\n", freq, fft_magnitude[i]);
+//	            writeMsg(&handlerUsart2, buffer);
+//	        }
+//	    }
+//
+
+
+
+
 	}
 }
 
@@ -357,6 +406,14 @@ int main(void){
 void BasicTimer2_Callback(void){
 
 	 GPIOxTooglePin(&handlerStateLed);
+//
+//   if (sample_index < FFT_SIZE) {
+//		fft_input[sample_index] = (float32_t)readAccelZ();
+//		sample_index++;
+//	} else {
+//		fft_ready = 1;
+//		sample_index = 0;
+//	}
 }
 
 

@@ -224,6 +224,8 @@ void writeMsg(USART_Handler_t *ptrUsartHandler, char *msgToSed ){
 }
 
 
+
+
 uint8_t getRxData(void){
 	return auxRxData;
 

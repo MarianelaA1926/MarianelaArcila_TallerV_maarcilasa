@@ -1003,107 +1003,104 @@ int main(void){
 
 	return 0;
 }
-
-#include "arm_math.h"      // Para las funciones de CMSIS-DSP
-#include "stm32f4xx_hal.h" // O la cabecera HAL de tu familia de STM32
-
-#include <stdio.h>         // Para la función sprintf()
-#include <string.h>        // Para la función strlen()
-
-//==============================================================================
-// PARÁMETROS DEL SISTEMA Y BUFFERS
-//==============================================================================
-
-// --- Parámetros de la Señal y la FFT ---
-#define SAMPLING_FREQ   44100.0f  // Frecuencia de muestreo en Hz
-#define FFT_SIZE        1024      // Tamaño de la FFT (debe ser potencia de 2)
-#define NUM_MAGNITUDES  (FFT_SIZE / 2) // Número de magnitudes de frecuencia (N/2)
-
-// --- Buffers para el procesamiento ---
-// Estos buffers deben ser globales o estáticos para no desbordar la pila.
-
-// Buffer de entrada: Llenado con datos del ADC ya convertidos a float32_t
-// Se asume que este buffer es llenado por otra parte de tu código.
-float32_t dsp_input_buffer[FFT_SIZE];
-
-// Buffer para el resultado intermedio de la FFT (formato complejo empaquetado)
-float32_t fft_output_buffer[FFT_SIZE];
-
-// Buffer para el resultado final de las magnitudes del espectro
-float32_t fft_magnitudes[NUM_MAGNITUDES];
-
-// Buffer para formatear la cadena de texto a enviar por UART
-char tx_buffer[100];
-
-
-// --- Recursos Externos (Handles) ---
-// Estas variables son creadas por STM32CubeIDE en 'main.c'
-// Las declaramos como 'extern' para que esta función pueda usarlas.
-extern UART_HandleTypeDef huart2;
-extern arm_rfft_fast_instance_f32 rfft_instance;
-
-
-/**
- * @brief  Realiza el análisis FFT completo y transmite la frecuencia dominante por UART.
- * @note   Esta función asume que:
- *         1. La instancia 'rfft_instance' ha sido inicializada con arm_rfft_fast_init_f32().
- *         2. El buffer 'dsp_input_buffer' contiene 'FFT_SIZE' muestras válidas.
- *         3. El periférico USART2 (huart2) ha sido inicializado.
- */
-void ejecutar_fft(void) {
-
-    // --- PASO 1: Ejecutar la Transformada Rápida de Fourier (FFT) ---
-    // Convierte los datos del dominio del tiempo al dominio de la frecuencia.
-    arm_rfft_fast_f32(
-        &rfft_instance,
-        dsp_input_buffer,
-        fft_output_buffer,
-        0 // '0' para FFT directa, '1' para FFT inversa
-    );
-
-    // --- PASO 2: Calcular las Magnitudes del Espectro ---
-    // Convierte el resultado complejo de la FFT en un espectro de potencia (magnitudes).
-    arm_cmplx_mag_f32(
-        fft_output_buffer,
-        fft_magnitudes,
-        NUM_MAGNITUDES
-    );
-
-    // --- PASO 3: Encontrar la Frecuencia Dominante ---
-    // Busca el valor máximo en el array de magnitudes para encontrar el pico de frecuencia.
-    float32_t max_magnitude;
-    uint32_t  max_index;
-
-    // Usamos arm_max_f32 para encontrar el pico.
-    // IMPORTANTE: Empezamos la búsqueda desde el índice 1 para ignorar la componente DC (0 Hz),
-    // que a menudo es muy grande y no es de interés para señales AC.
-    arm_max_f32(
-        &fft_magnitudes[1],     // Puntero al segundo elemento del array
-        NUM_MAGNITUDES - 1,     // Número de elementos a buscar
-        &max_magnitude,         // Variable para guardar el valor máximo
-        &max_index              // Variable para guardar el índice del máximo
-    );
-
-    // El índice devuelto es relativo al subarray que le pasamos, así que sumamos 1
-    // para obtener el índice correcto en el array 'fft_magnitudes' completo.
-    max_index = max_index + 1;
-
-    // --- PASO 4: Convertir el Índice a una Frecuencia Real (Hz) ---
-    float32_t frequency_resolution = SAMPLING_FREQ / FFT_SIZE;
-    float32_t dominant_frequency = max_index * frequency_resolution;
-
-    // --- PASO 5: Reportar el Resultado por UART ---
-    // Formatear la cadena de texto con el resultado
-    sprintf(tx_buffer, "Frecuencia Dominante: %.2f Hz (Magnitud: %.2f)\r\n", dominant_frequency, max_magnitude);
-
-    // Transmitir la cadena de texto usando las librerías HAL
-    HAL_UART_Transmit(
-        &huart2,
-        (uint8_t*)tx_buffer,
-        strlen(tx_buffer),
-        100 // Timeout de 100 ms
-    );
-}
+//
+//#include <stdio.h>         // Para la función sprintf()
+//#include <string.h>        // Para la función strlen()
+//
+////==============================================================================
+//// PARÁMETROS DEL SISTEMA Y BUFFERS
+////==============================================================================
+//
+//// --- Parámetros de la Señal y la FFT ---
+//#define SAMPLING_FREQ   44100.0f  // Frecuencia de muestreo en Hz
+//#define FFT_SIZE        1024      // Tamaño de la FFT (debe ser potencia de 2)
+//#define NUM_MAGNITUDES  (FFT_SIZE / 2) // Número de magnitudes de frecuencia (N/2)
+//
+//// --- Buffers para el procesamiento ---
+//// Estos buffers deben ser globales o estáticos para no desbordar la pila.
+//
+//// Buffer de entrada: Llenado con datos del ADC ya convertidos a float32_t
+//// Se asume que este buffer es llenado por otra parte de tu código.
+//float32_t dsp_input_buffer[FFT_SIZE];
+//
+//// Buffer para el resultado intermedio de la FFT (formato complejo empaquetado)
+//float32_t fft_output_buffer[FFT_SIZE];
+//
+//// Buffer para el resultado final de las magnitudes del espectro
+//float32_t fft_magnitudes[NUM_MAGNITUDES];
+//
+//// Buffer para formatear la cadena de texto a enviar por UART
+//char tx_buffer[100];
+//
+//
+//// --- Recursos Externos (Handles) ---
+//// Estas variables son creadas por STM32CubeIDE en 'main.c'
+//// Las declaramos como 'extern' para que esta función pueda usarlas.
+//extern UART_HandleTypeDef huart2;
+//extern arm_rfft_fast_instance_f32 rfft_instance;
+//
+//
+///**
+// * @brief  Realiza el análisis FFT completo y transmite la frecuencia dominante por UART.
+// * @note   Esta función asume que:
+// *         1. La instancia 'rfft_instance' ha sido inicializada con arm_rfft_fast_init_f32().
+// *         2. El buffer 'dsp_input_buffer' contiene 'FFT_SIZE' muestras válidas.
+// *         3. El periférico USART2 (huart2) ha sido inicializado.
+// */
+//void ejecutar_fft(void) {
+//
+//    // --- PASO 1: Ejecutar la Transformada Rápida de Fourier (FFT) ---
+//    // Convierte los datos del dominio del tiempo al dominio de la frecuencia.
+//    arm_rfft_fast_f32(
+//        &rfft_instance,
+//        dsp_input_buffer,
+//        fft_output_buffer,
+//        0 // '0' para FFT directa, '1' para FFT inversa
+//    );
+//
+//    // --- PASO 2: Calcular las Magnitudes del Espectro ---
+//    // Convierte el resultado complejo de la FFT en un espectro de potencia (magnitudes).
+//    arm_cmplx_mag_f32(
+//        fft_output_buffer,
+//        fft_magnitudes,
+//        NUM_MAGNITUDES
+//    );
+//
+//    // --- PASO 3: Encontrar la Frecuencia Dominante ---
+//    // Busca el valor máximo en el array de magnitudes para encontrar el pico de frecuencia.
+//    float32_t max_magnitude;
+//    uint32_t  max_index;
+//
+//    // Usamos arm_max_f32 para encontrar el pico.
+//    // IMPORTANTE: Empezamos la búsqueda desde el índice 1 para ignorar la componente DC (0 Hz),
+//    // que a menudo es muy grande y no es de interés para señales AC.
+//    arm_max_f32(
+//        &fft_magnitudes[1],     // Puntero al segundo elemento del array
+//        NUM_MAGNITUDES - 1,     // Número de elementos a buscar
+//        &max_magnitude,         // Variable para guardar el valor máximo
+//        &max_index              // Variable para guardar el índice del máximo
+//    );
+//
+//    // El índice devuelto es relativo al subarray que le pasamos, así que sumamos 1
+//    // para obtener el índice correcto en el array 'fft_magnitudes' completo.
+//    max_index = max_index + 1;
+//
+//    // --- PASO 4: Convertir el Índice a una Frecuencia Real (Hz) ---
+//    float32_t frequency_resolution = SAMPLING_FREQ / FFT_SIZE;
+//    float32_t dominant_frequency = max_index * frequency_resolution;
+//
+//    // --- PASO 5: Reportar el Resultado por UART ---
+//    // Formatear la cadena de texto con el resultado
+//    sprintf(tx_buffer, "Frecuencia Dominante: %.2f Hz (Magnitud: %.2f)\r\n", dominant_frequency, max_magnitude);
+//
+//    // Transmitir la cadena de texto usando las librerías HAL
+//    HAL_UART_Transmit(
+//        &huart2,
+//        (uint8_t*)tx_buffer,
+//        strlen(tx_buffer),
+//        100 // Timeout de 100 ms
+//    );
+//}
 
 //-------------------------------------------------------Callbacks-------------------------------------------------
 
@@ -1115,7 +1112,7 @@ void adcComplete_Callback(void) {
 
     if (sampleIndex >= current_fft_size) {
         sampleIndex = 0;
-        ejecutarFFT();  // Llama tu función FFT
+        //ejecutarFFT();  // Llama tu función FFT
         writeMsg(&handlerUsart2, "FFT ejecutada (por ADC)\r\n");
     }
 }

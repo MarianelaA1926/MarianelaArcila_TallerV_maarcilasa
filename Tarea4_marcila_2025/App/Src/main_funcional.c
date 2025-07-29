@@ -176,7 +176,7 @@ void initSystem(void){
 	starTimer(&handlerTimerStateLed);
 
 	//Se configura a 16MHz
-	config_SysTick_ms(0);
+//	config_SysTick_ms(0);
 
 
 //-------------------------------------------I2C----------------------------------------------------------
